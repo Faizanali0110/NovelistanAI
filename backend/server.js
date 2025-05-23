@@ -182,11 +182,22 @@ const startServer = async () => {
   }
 };
 
-app.get('', (req, res) => {
- 
-  activeStatus = true;
-  errors = false;
-}); 
+// Root route for API health check
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: 'API is running', 
+    version: '1.0.0' 
+  });
+});
+
+// getMessage route that was changed earlier
+app.get('/getMessage', (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: 'API is running...' 
+  });
+});
 
 // For local development, start the server directly
 if (process.env.NODE_ENV !== 'production') {
