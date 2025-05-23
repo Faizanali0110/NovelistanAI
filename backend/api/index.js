@@ -19,6 +19,16 @@ module.exports = async (req, res) => {
       });
     }
     
+    // Special handling for getMessage route
+    if (req.url === '/getMessage' || req.url.startsWith('/getMessage?')) {
+      return res.status(200).json({
+        success: true,
+        message: 'API is running...',
+        serverless: true,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     // Forward all other requests to the Express app
     return app(req, res);
   } catch (error) {
