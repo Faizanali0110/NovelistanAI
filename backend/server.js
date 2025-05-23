@@ -144,11 +144,21 @@ app.post('/addUser', async (req, res) => {
 // 5. Error Handling
 // ======================
 
+// Debug middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // 404 Handler
 app.use((req, res) => {
+  console.log(`[404] Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ 
     success: false, 
-    message: 'Route not found' 
+    message: 'Route not found', 
+    path: req.originalUrl,
+    method: req.method,
+    timestamp: new Date().toISOString()
   });
 });
 
