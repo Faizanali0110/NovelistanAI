@@ -17,6 +17,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 
 // Import models
 const User = require('./models/User');
+const { error } = require('console');
 
 // Initialize Express app
 const app = express();
@@ -182,11 +183,14 @@ const startServer = async () => {
 };
 
 app.get('', (req, res) => {
-  res.send('API is running...');
-});
+ 
+  activeStatus = true;
+  errors = false;
+}); 
 
 // Start the server
 startServer();
+
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
