@@ -188,13 +188,16 @@ app.get('', (req, res) => {
   errors = false;
 }); 
 
-// Start the server
-startServer();
+// For local development, start the server directly
+if (process.env.NODE_ENV !== 'production') {
+  startServer();
 
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (err) => {
+    console.error('Unhandled Rejection:', err);
+    process.exit(1);
+  });
+}
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
-  // Close server & exit process
-  server.close(() => process.exit(1));
-});
+// For Vercel, export the Express app
+module.exports = app;
