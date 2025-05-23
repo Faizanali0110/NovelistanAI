@@ -377,25 +377,37 @@ const LoginPage = () => {
                       <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
                     </div>
                     <div className="relative flex justify-center text-xs">
-                      <span className="px-3 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">Or continue with</span>
+                      <span className="px-3 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400">Social logins temporarily unavailable</span>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex justify-center gap-3">
-                    <button 
-                      type="button" 
-                      onClick={handleGoogleLogin} 
-                      className="p-2 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-gray-100 transition-all duration-300 hover:shadow-sm"
-                      disabled={loading}
-                    >
-                      <SocialIcon platform="google" />
-                    </button>
-                    <button type="button" className="p-2 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-gray-100 transition-all duration-300 hover:shadow-sm">
-                      <SocialIcon platform="facebook" />
-                    </button>
-                    <button type="button" className="p-2 bg-gray-50 dark:bg-gray-800 rounded-full hover:bg-gray-100 transition-all duration-300 hover:shadow-sm">
-                      <SocialIcon platform="twitter" />
-                    </button>
+                  <div className="mt-3 flex flex-col items-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-2">
+                      Google login requires a valid OAuth client ID.
+                    </p>
+                    <div className="flex justify-center gap-3">
+                      <button 
+                        type="button" 
+                        className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-400 cursor-not-allowed opacity-50"
+                        disabled={true}
+                      >
+                        <SocialIcon platform="google" />
+                      </button>
+                      <button 
+                        type="button" 
+                        className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-400 cursor-not-allowed opacity-50"
+                        disabled={true}
+                      >
+                        <SocialIcon platform="facebook" />
+                      </button>
+                      <button 
+                        type="button" 
+                        className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-400 cursor-not-allowed opacity-50"
+                        disabled={true}
+                      >
+                        <SocialIcon platform="twitter" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </form>
