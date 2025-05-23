@@ -180,6 +180,10 @@ const startServer = async () => {
   }
 };
 
+app.get('/', (req, res) => {
+  res.send('API is running...');
+});
+
 // Start the server
 startServer();
 
