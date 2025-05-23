@@ -181,7 +181,7 @@ const startServer = async () => {
   }
 };
 
-app.get('/getMessage', (req, res) => {
+app.get('', (req, res) => {
   res.send('API is running...');
 });
 
