@@ -41,7 +41,8 @@ const configureCors = (req, res, next) => {
     'http://localhost:5178',
     'http://localhost:5180',
     'http://localhost:5173',
-    'https://novelistan-ai-ewj8.vercel.app'
+    'https://novelistan-ai-ewj8.vercel.app',
+    'https://novelistan-ai-ewj8-p50pn7qbz-01-131222-017-bahriaedups-projects.vercel.app'
   ];
   
   const origin = req.headers.origin;
