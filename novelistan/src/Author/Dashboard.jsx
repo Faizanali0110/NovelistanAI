@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Book, PlusCircle, Library, Edit, Trash2, BookOpen, Sparkles, ChevronRight, Clock } from 'lucide-react';
+import { Book, PlusCircle, Library, Edit, Trash2, BookOpen, Sparkles, ChevronRight, Clock, Lightbulb } from 'lucide-react';
 
 const DashboardCard = ({ to, icon: Icon, title, description, color, accent = false }) => (
   <Link 
@@ -41,6 +41,12 @@ const Dashboard = () => {
       icon: Library,
       title: "View Books",
       description: "Browse and search your entire collection"
+    },
+    {
+      to: "creative-tools",
+      icon: Lightbulb,
+      title: "Creative Tools",
+      description: "Get AI-powered writing assistance and book cover ideas"
     },
     {
       to: "update-book",

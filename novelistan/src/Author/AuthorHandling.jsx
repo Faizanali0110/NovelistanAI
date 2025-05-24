@@ -5,11 +5,11 @@ import UpdateBook from "./UpdateBook";
 import DeleteBook from "./DeleteBook";
 import Dashboard from "./Dashboard";
 import ViewBooks from "./ViewAuthorBooks";
+import CreativeTools from "./CreativeTools";
 import Footer from "../components/Footer";
-import Header from "../components/Header";
+import SharedHeader from "../components/SharedHeader";
 import Cookies from 'js-cookie';
 import { useTheme } from '../contexts/ThemeContext';
-import ThemeToggle from '../components/ThemeToggle';
 
 
 const AuthorHandling = () => {
@@ -21,18 +21,18 @@ const AuthorHandling = () => {
     const { isDark } = useTheme();
     
     return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary-50 to-primary-100 dark:from-secondary-900 dark:to-secondary-800 transition-colors duration-300">
-      <div className="relative">
-        <Header />
-        <ThemeToggle position="relative" className="absolute top-4 right-4" />
-      </div>
-      <main className="flex-grow container mx-auto px-4 py-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+      {/* Use SharedHeader with author role */}
+      <SharedHeader userRole="author" />
+      <main className="flex-grow container mx-auto px-4 py-6 mt-28">
         <Routes>
           <Route path="/" element={<Dashboard />} /> {/* Default route */}
           <Route path="add-book" element={<AddBook />} />
           <Route path="view-books" element={<ViewBooks />} />
           <Route path="update-book" element={<UpdateBook />} />
           <Route path="delete-book" element={<DeleteBook />} />
+          <Route path="creative-tools/:bookId" element={<CreativeTools />} />
+          <Route path="creative-tools" element={<CreativeTools />} />
         </Routes>
        
       </main>

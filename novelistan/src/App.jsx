@@ -9,14 +9,12 @@ import AuthorHandling from './Author/AuthorHandling';
 import NotFoundPage from './NotFoundPage';
 import CustomerHandling from './Customer/CustomerHandling';
 import { ThemeProvider } from './contexts/ThemeContext';
-import ThemeToggle from './components/ThemeToggle';
 
 const App = () => {
 
 
   return (
     <ThemeProvider>
-      <ThemeToggle />
       <Router>
         <Routes>
           <Route path="/" element={<NovelLandingPage />} />

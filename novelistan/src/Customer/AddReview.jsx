@@ -16,7 +16,7 @@ const StarRatingComponent = ({ rating, onChange }) => {
           key={star}
           size={24}
           onClick={() => onChange && onChange(star)}
-          className={`cursor-pointer ${star <= rating ? 'text-primary-500 dark:text-primary-400 fill-primary-500 dark:fill-primary-400' : 'text-secondary-300 dark:text-secondary-600'} transition-colors duration-300`}
+          className={`cursor-pointer transform transition-all duration-200 ${star <= rating ? 'text-yellow-500 fill-yellow-500 scale-110' : 'text-gray-300 dark:text-gray-600 hover:scale-105'} ${onChange ? 'hover:text-yellow-400' : ''}`}
         />
       ))}
     </div>
@@ -190,21 +190,25 @@ const AddReview = () => {
   
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-primary-50 dark:bg-secondary-900 transition-colors duration-300">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400"></div>
+      <div className="container mx-auto px-4 sm:px-6 py-8">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 dark:border-primary-400 transition-colors duration-300"></div>
+          </div>
+        ) : null}
       </div>
     );
   }
   
   if (errorMessage) {
     return (
-      <div className="max-w-3xl mx-auto mt-8 p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-md transition-colors duration-300">
-        <div className="text-red-500 dark:text-red-400 text-center mb-4">{errorMessage}</div>
+      <div className="text-center p-6 sm:p-8 bg-red-50 dark:bg-red-900/20 rounded-xl shadow-md text-red-600 dark:text-red-400 transition-colors duration-300 max-w-xl mx-auto">
+        <p className="mb-4">{errorMessage}</p>
         <button 
           onClick={() => navigate('/CustomerHandling/books')} 
-          className="w-full py-2 px-4 bg-primary-600 dark:bg-primary-700 text-white rounded-md hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300"
+          className="mt-4 px-6 py-2.5 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300 shadow-sm font-medium"
         >
-          Back to Books
+          Return to Books
         </button>
       </div>
     );
@@ -214,16 +218,54 @@ const AddReview = () => {
     <div className="max-w-3xl mx-auto mt-8 mb-12">
       {book ? (
         <>
-          {/* Book Details */}
-          <div className="p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-md mb-8 transition-colors duration-300">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-primary-700 dark:text-primary-400 mb-2 transition-colors duration-300">{book.name}</h2>
-              <p className="text-primary-600 dark:text-primary-500 transition-colors duration-300">{book.author?.name || 'Unknown Author'}</p>
+          <div className="mb-8 bg-white dark:bg-secondary-900 rounded-xl p-4 sm:p-6 shadow-lg transition-colors duration-300 overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-start gap-6">
+              {/* Book Cover Image */}
+              <div className="flex-shrink-0 w-full sm:w-1/4 max-w-[200px] mx-auto sm:mx-0">
+                {book.coverImage ? (
+                  <img 
+                    src={`${API_BASE_URL}/${book.coverImage}`} 
+                    alt={book.name} 
+                    className="w-full h-auto object-cover rounded-xl shadow-lg"
+                  />
+                ) : (
+                  <div className="w-full aspect-[2/3] bg-gradient-to-br from-primary-100 to-primary-200 dark:from-secondary-700 dark:to-secondary-600 rounded-xl flex items-center justify-center transition-colors duration-300 shadow-lg">
+                    <span className="text-primary-500 dark:text-primary-400 transition-colors duration-300 font-medium">No cover available</span>
+                  </div>
+                )}
+              </div>
+              {/* Book Details */}
+              <div className="flex-1">
+                <h1 className="text-2xl sm:text-3xl font-bold text-primary-800 dark:text-primary-300 mb-2 transition-colors duration-300 leading-tight">{book.name}</h1>
+                <p className="text-primary-600 dark:text-primary-500 mb-1 transition-colors duration-300 text-sm sm:text-base">
+                  By {book.author?.name || 'Unknown Author'}
+                </p>
+                
+                <div className="flex flex-wrap gap-2 my-3">
+                  <span className="inline-block px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-400 text-xs rounded-full">
+                    {book.genre || 'Uncategorized'}
+                  </span>
+                  <span className="inline-block px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-400 text-xs rounded-full">
+                    ISBN: {book.isbn || 'N/A'}
+                  </span>
+                </div>
+                
+                <div className="flex mt-6">
+                  <button
+                    onClick={() => navigate(`/CustomerHandling/books/${bookId}`)}
+                    className="py-2 px-4 bg-white dark:bg-secondary-800 text-primary-700 dark:text-primary-400 rounded-lg hover:bg-primary-50 dark:hover:bg-secondary-700 transition-colors duration-300 border border-primary-200 dark:border-secondary-700 shadow-sm flex items-center gap-2 text-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Book
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          
           {/* Reviews Section */}
-          <div className="p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-md mb-8 transition-colors duration-300">
+          <div className="p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-lg mb-8 transition-colors duration-300">
             <h3 className="text-xl font-bold text-primary-700 dark:text-primary-400 mb-4 transition-colors duration-300">Reviews ({reviews.length})</h3>
             
             {reviews.length === 0 ? (
@@ -262,46 +304,47 @@ const AddReview = () => {
               </div>
             )}
           </div>
-          
           {/* Review Form - Only show if logged in */}
           {isLoggedIn ? (
-            <div className="p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-md transition-colors duration-300">
-              <h3 className="text-xl font-bold text-primary-700 dark:text-primary-400 mb-4 transition-colors duration-300">Write a Review</h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="p-4 sm:p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-lg transition-colors duration-300 border border-primary-100 dark:border-secondary-800">
+              <h3 className="text-xl font-bold text-primary-700 dark:text-primary-400 mb-4 transition-colors duration-300 border-b border-primary-100 dark:border-secondary-800 pb-2">Write a Review</h3>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-primary-700 dark:text-primary-400 mb-2 transition-colors duration-300">Your Rating</label>
-                  <StarRatingComponent 
-                    rating={review.rating} 
-                    onChange={handleRatingChange} 
-                  />
+                  <label className="block text-primary-700 dark:text-primary-400 mb-3 transition-colors duration-300 font-medium">Your Rating</label>
+                  <div className="bg-primary-50 dark:bg-secondary-800 p-4 rounded-lg flex justify-center">
+                    <StarRatingComponent 
+                      rating={review.rating} 
+                      onChange={handleRatingChange} 
+                    />
+                  </div>
                 </div>
                 
                 <div>
-                  <label htmlFor="comment" className="block text-primary-700 dark:text-primary-400 mb-2 transition-colors duration-300">Your Review</label>
+                  <label htmlFor="comment" className="block text-primary-700 dark:text-primary-400 mb-2 transition-colors duration-300 font-medium">Your Review</label>
                   <textarea
                     id="comment"
                     name="comment"
                     value={review.comment}
                     onChange={handleInputChange}
                     rows="4"
-                    className="w-full px-3 py-2 border border-primary-300 dark:border-primary-700 bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-300"
+                    className="w-full px-4 py-3 border border-primary-200 dark:border-secondary-700 bg-white dark:bg-secondary-800 text-secondary-900 dark:text-secondary-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 transition-colors duration-300 shadow-sm"
                     placeholder="Write your review..."
                     required
                   ></textarea>
                 </div>
                 
-                <div className="flex space-x-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4">
                   <button
                     type="button"
                     onClick={() => navigate(`/CustomerHandling/books/${bookId}`)}
-                    className="flex-1 py-2 px-4 bg-secondary-200 dark:bg-secondary-700 text-secondary-700 dark:text-secondary-200 rounded-md hover:bg-secondary-300 dark:hover:bg-secondary-600 transition-colors duration-300"
+                    className="sm:flex-1 py-3 px-4 bg-white dark:bg-secondary-800 text-primary-700 dark:text-primary-400 rounded-lg hover:bg-primary-50 dark:hover:bg-secondary-700 transition-colors duration-300 border border-primary-200 dark:border-secondary-700 shadow-sm font-medium"
                   >
                     Cancel
                   </button>
                   
                   <button
                     type="submit"
-                    className="flex-1 py-2 px-4 bg-primary-600 dark:bg-primary-700 text-white rounded-md hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300"
+                    className="sm:flex-1 py-3 px-4 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300 shadow-md font-medium"
                   >
                     Submit Review
                   </button>
@@ -309,11 +352,15 @@ const AddReview = () => {
               </form>
             </div>
           ) : (
-            <div className="p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-md text-center transition-colors duration-300">
-              <p className="mb-4 text-secondary-700 dark:text-secondary-300 transition-colors duration-300">You need to be logged in to submit a review.</p>
+            <div className="p-6 bg-white dark:bg-secondary-900 rounded-xl shadow-lg text-center transition-colors duration-300 border border-primary-100 dark:border-secondary-800">
+              <div className="bg-primary-50 dark:bg-secondary-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <User className="w-8 h-8 text-primary-500 dark:text-primary-400" />
+              </div>
+              <h3 className="text-xl font-bold text-primary-700 dark:text-primary-400 mb-2">Account Required</h3>
+              <p className="mb-6 text-secondary-600 dark:text-secondary-400 transition-colors duration-300 max-w-md mx-auto">You need to be logged in to share your thoughts about this book.</p>
               <button
                 onClick={() => navigate('/login')}
-                className="py-2 px-6 bg-primary-600 dark:bg-primary-700 text-white rounded-md hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300"
+                className="py-2.5 px-6 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300 shadow-md font-medium"
               >
                 Log In to Review
               </button>
@@ -321,8 +368,20 @@ const AddReview = () => {
           )}
         </>
       ) : (
-        <div className="text-center text-primary-600 dark:text-primary-500 transition-colors duration-300">
-          Book not found or has been removed.
+        <div className="text-center p-8 bg-white dark:bg-secondary-900 rounded-xl shadow-lg max-w-lg mx-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-primary-300 dark:text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h3 className="text-xl font-bold text-primary-700 dark:text-primary-400 mb-2">Book Not Found</h3>
+          <p className="text-primary-600 dark:text-primary-500 mb-6 transition-colors duration-300">
+            This book may have been removed or is no longer available.
+          </p>
+          <button
+            onClick={() => navigate('/CustomerHandling/books')}
+            className="py-2.5 px-6 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-800 transition-colors duration-300 shadow-md font-medium"
+          >
+            Browse Other Books
+          </button>
         </div>
       )}
     </div>

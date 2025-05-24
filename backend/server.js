@@ -14,6 +14,8 @@ const authorRoutes = require('./routes/authorRoutes');
 const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const authorToolsRoutes = require('./routes/authorToolsRoutes');
+const readingExperienceRoutes = require('./routes/readingExperienceRoutes');
 
 // Import models
 const User = require('./models/User');
@@ -94,6 +96,8 @@ app.use('/api/user', userRoutes);
 app.use('/api/Customer', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/author-tools', authorToolsRoutes);
+app.use('/api/reading', readingExperienceRoutes);
 
 // Public Routes
 app.post('/addUser', async (req, res) => {

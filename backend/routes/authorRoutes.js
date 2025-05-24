@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const path = require('path');
 const Author = require('../models/Author');
 const Book = require('../models/Book');
 const auth = require('../middleware/auth');
@@ -232,6 +233,47 @@ router.put('/me', auth(['author']), async (req, res) => {
     res.json(author);
   } catch (error) {
     res.status(500).json({ message: 'Error updating profile', error: error.message });
+  }
+});
+
+// Get author profile image by ID
+router.get('/authorImage/:userId', async (req, res) => {
+  try {
+    // Find the author by ID
+    const author = await Author.findById(req.params.userId).select('profilePicture');
+    
+    // Default profile image path
+    const defaultProfilePath = path.join(__dirname, '../uploads/profiles/default-profile.png');
+    
+    if (!author) {
+      console.log('Author not found, serving default profile image');
+      return res.sendFile(defaultProfilePath);
+    }
+    
+    // If no profile picture, serve default image
+    if (!author.profilePicture) {
+      console.log('No author profile picture, serving default');
+      return res.sendFile(defaultProfilePath);
+    }
+    
+    // Try to serve the author's profile picture
+    const imagePath = path.resolve(author.profilePicture);
+    
+    // Check if file exists
+    const fs = require('fs');
+    if (!fs.existsSync(imagePath)) {
+      console.log('Author profile picture not found, serving default');
+      return res.sendFile(defaultProfilePath);
+    }
+    
+    // Serve the image file
+    res.sendFile(imagePath);
+  } catch (error) {
+    console.error('Error fetching author image:', error);
+    
+    // Serve default image on error
+    const defaultProfilePath = path.join(__dirname, '../uploads/profiles/default-profile.png');
+    res.sendFile(defaultProfilePath);
   }
 });
 
