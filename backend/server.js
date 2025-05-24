@@ -19,6 +19,7 @@ const readingExperienceRoutes = require('./routes/readingExperienceRoutes');
 
 // Import models
 const User = require('./models/User');
+const Customer = require('./models/Customer');
 const { error } = require('console');
 
 // Initialize Express app
@@ -93,7 +94,52 @@ const connectDB = async () => {
 app.use('/api/book', bookRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/Customer', userRoutes);
+// Create a separate customer routes from userRoutes
+const customerRoutes = express.Router();
+// Define customer login route
+customerRoutes.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Check if customer exists
+    let user = await Customer.findOne({ email });
+    
+    // If no user is found
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Check password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, role: 'customer' },
+      process.env.JWT_SECRET || 'your_jwt_secret',
+      { expiresIn: '7d' }
+    );
+
+    // Don't send password in response
+    user.password = undefined;
+
+    res.json({
+      token,
+      user: user._id,
+      role: 'customer'
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+app.use('/api/Customer', customerRoutes);
+
+// Ensure the customerImage route is available through the /api/user path
+app.use('/api/user', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/author-tools', authorToolsRoutes);
