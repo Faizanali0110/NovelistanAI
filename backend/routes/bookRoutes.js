@@ -182,8 +182,37 @@ router.get('/pdf/:id', auth(['customer', 'author']), async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
     
-    // Serve the PDF file
-    res.sendFile(path.resolve(book.bookFile));
+    // Handle Azure Blob Storage URLs
+    if (book.bookFile && book.bookFile.startsWith('http')) {
+      console.log('Book file is in Azure, proxying file...');
+      
+      // Proxy the file request to avoid CORS issues
+      const axios = require('axios');
+      try {
+        const response = await axios.get(book.bookFile, {
+          responseType: 'arraybuffer'
+        });
+        
+        // Set appropriate headers
+        const contentType = response.headers['content-type'] || 'application/pdf';
+        res.set('Content-Type', contentType);
+        res.set('Content-Disposition', `inline; filename="book-${req.params.id}.pdf"`);
+        
+        // Send the file data
+        return res.send(response.data);
+      } catch (axiosError) {
+        console.error('Error proxying PDF from Azure:', axiosError.message);
+        return res.status(500).json({ message: 'Error retrieving book file from cloud storage' });
+      }
+    }
+    
+    // Legacy support for local files
+    try {
+      res.sendFile(path.resolve(book.bookFile));
+    } catch (fsError) {
+      console.error('Error serving local book file:', fsError);
+      return res.status(500).json({ message: 'Error serving book file' });
+    }
   } catch (error) {
     console.error('Error serving book PDF:', error);
     res.status(500).json({ message: 'Error serving book PDF', error: error.message });
@@ -220,8 +249,51 @@ router.get('/cover/:id', async (req, res) => {
       return res.status(404).json({ message: 'Book not found' });
     }
     
-    // Serve the cover image file
-    res.sendFile(path.resolve(book.coverImage));
+    // Default cover image path
+    const defaultCoverPath = path.join(__dirname, '../public/default-cover.png');
+    
+    // Handle Azure Blob Storage URLs
+    if (book.coverImage && book.coverImage.startsWith('http')) {
+      console.log('Cover image is in Azure, proxying image...');
+      
+      // Proxy the image request to avoid CORS issues
+      const axios = require('axios');
+      try {
+        const response = await axios.get(book.coverImage, {
+          responseType: 'arraybuffer'
+        });
+        
+        // Set appropriate headers
+        const contentType = response.headers['content-type'] || 'image/jpeg';
+        res.set('Content-Type', contentType);
+        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        
+        // Send the image data
+        return res.send(response.data);
+      } catch (axiosError) {
+        console.error('Error proxying image from Azure:', axiosError.message);
+        // Try to serve default image if available
+        if (require('fs').existsSync(defaultCoverPath)) {
+          return res.sendFile(defaultCoverPath);
+        }
+        return res.status(500).json({ message: 'Error retrieving cover image' });
+      }
+    }
+    
+    // Legacy support for local files
+    try {
+      // Check if file exists locally
+      if (require('fs').existsSync(path.resolve(book.coverImage))) {
+        return res.sendFile(path.resolve(book.coverImage));
+      } else if (require('fs').existsSync(defaultCoverPath)) {
+        return res.sendFile(defaultCoverPath);
+      } else {
+        return res.status(404).json({ message: 'Cover image not found' });
+      }
+    } catch (fsError) {
+      console.error('Error serving local cover image:', fsError);
+      return res.status(500).json({ message: 'Error serving cover image' });
+    }
   } catch (error) {
     console.error('Error serving book cover image:', error);
     res.status(500).json({ message: 'Error serving book cover image', error: error.message });

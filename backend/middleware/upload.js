@@ -1,27 +1,21 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const { uploadBlob } = require('../services/azureBlobService');
 
-// Configure storage for book files
-const bookStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/books/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'book-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure storage for Azure Blob Storage
+const memoryStorage = multer.memoryStorage();
 
-// Configure storage for cover images
-const coverStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/covers/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'cover-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Generate a unique blob name for files
+const generateUniqueBlobName = (prefix, originalname) => {
+  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+  return `${prefix}-${uniqueSuffix}${path.extname(originalname)}`;
+};
+
+// Instead of diskStorage, we'll use memoryStorage and upload to Azure later
+// This is just for compatibility with existing code
+
+// All file storage will use memory storage with Azure Blob upload
 
 // File filter for book files
 const bookFileFilter = (req, file, cb) => {
@@ -47,9 +41,9 @@ const imageFileFilter = (req, file, cb) => {
   }
 };
 
-// Initialize multer uploads
+// Initialize multer uploads with memory storage
 const uploadBook = multer({
-  storage: bookStorage,
+  storage: memoryStorage,
   fileFilter: bookFileFilter,
   limits: {
     fileSize: 20 * 1024 * 1024 // 20MB limit
@@ -57,38 +51,20 @@ const uploadBook = multer({
 });
 
 const uploadCover = multer({
-  storage: coverStorage,
+  storage: memoryStorage,
   fileFilter: imageFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
 
-// Middleware for handling multiple file uploads
+// Middleware for handling multiple file uploads to Azure Blob Storage
 const uploadBookFiles = (req, res, next) => {
+  console.log('Setting up book upload middleware with Azure Blob Storage');
+  
+  // Use memory storage for files before uploading to Azure
   const upload = multer({
-    storage: multer.diskStorage({
-      destination: (req, file, cb) => {
-        if (file.fieldname === 'bookFile') {
-          cb(null, 'uploads/books/');
-        } else if (file.fieldname === 'coverImage') {
-          cb(null, 'uploads/covers/');
-        } else {
-          cb(new Error('Invalid file type'), null);
-        }
-      },
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        if (file.fieldname === 'bookFile') {
-          cb(null, 'book-' + uniqueSuffix + ext);
-        } else if (file.fieldname === 'coverImage') {
-          cb(null, 'cover-' + uniqueSuffix + ext);
-        } else {
-          cb(new Error('Invalid file type'), null);
-        }
-      }
-    }),
+    storage: memoryStorage, // Use memory storage for Azure uploads
     fileFilter: (req, file, cb) => {
       const bookAllowedTypes = ['.pdf', '.epub', '.mobi'];
       const imageAllowedTypes = ['.jpg', '.jpeg', '.png', '.gif'];
@@ -99,7 +75,7 @@ const uploadBookFiles = (req, res, next) => {
       } else if (file.fieldname === 'coverImage' && imageAllowedTypes.includes(ext)) {
         cb(null, true);
       } else {
-        cb(new Error('Invalid file type'), false);
+        cb(new Error(`Invalid file type: ${ext}`), false);
       }
     },
     limits: {
@@ -110,64 +86,210 @@ const uploadBookFiles = (req, res, next) => {
     { name: 'coverImage', maxCount: 1 }
   ]);
 
-  upload(req, res, (err) => {
+  upload(req, res, async (err) => {
     if (err) {
       console.error('Upload error:', err);
       return res.status(400).json({ message: err.message });
     }
-    next();
+    
+    try {
+      if (req.files) {
+        console.log('Files uploaded to memory, now uploading to Azure Blob Storage...');
+        
+        // Upload book file to Azure if it exists
+        if (req.files.bookFile && req.files.bookFile[0]) {
+          const bookFile = req.files.bookFile[0];
+          const bookBlobName = generateUniqueBlobName('book', bookFile.originalname);
+          
+          // Get content type based on file extension
+          const bookContentType = {
+            '.pdf': 'application/pdf',
+            '.epub': 'application/epub+zip',
+            '.mobi': 'application/x-mobipocket-ebook'
+          }[path.extname(bookFile.originalname).toLowerCase()] || 'application/octet-stream';
+          
+          console.log(`Uploading book file ${bookBlobName} to Azure...`);
+          
+          try {
+            // Upload to Azure Blob Storage
+            const bookUrl = await uploadBlob(
+              bookFile.buffer,
+              bookBlobName,
+              bookContentType,
+              'uploads' // container name - must match the one configured
+            );
+            
+            console.log(`✅ Book file uploaded successfully to Azure: ${bookUrl}`);
+            
+            // Replace the file info with the Azure URL
+            req.files.bookFile[0].path = bookUrl;
+            req.files.bookFile[0].azure = true;
+          } catch (azureError) {
+            console.error(`❌ Failed to upload book file to Azure: ${azureError.message}`);
+            // Fallback to local storage
+            const localDir = path.join(__dirname, '../uploads/books');
+            if (!fs.existsSync(localDir)) {
+              fs.mkdirSync(localDir, { recursive: true });
+            }
+            
+            const localPath = path.join(localDir, bookBlobName);
+            fs.writeFileSync(localPath, bookFile.buffer);
+            
+            // Store the local path
+            const relativePath = `uploads/books/${bookBlobName}`;
+            req.files.bookFile[0].path = relativePath;
+            console.log(`📁 Fallback: Book file saved locally at ${relativePath}`);
+          }
+        }
+        
+        // Upload cover image to Azure if it exists
+        if (req.files.coverImage && req.files.coverImage[0]) {
+          const coverImage = req.files.coverImage[0];
+          const coverBlobName = generateUniqueBlobName('cover', coverImage.originalname);
+          
+          // Get content type based on file extension
+          const coverContentType = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.gif': 'image/gif'
+          }[path.extname(coverImage.originalname).toLowerCase()] || 'image/jpeg';
+          
+          console.log(`Uploading cover image ${coverBlobName} to Azure...`);
+          
+          try {
+            // Upload to Azure Blob Storage
+            const coverUrl = await uploadBlob(
+              coverImage.buffer,
+              coverBlobName,
+              coverContentType,
+              'uploads' // container name - must match the one configured
+            );
+            
+            console.log(`✅ Cover image uploaded successfully to Azure: ${coverUrl}`);
+            
+            // Replace the file info with the Azure URL
+            req.files.coverImage[0].path = coverUrl;
+            req.files.coverImage[0].azure = true;
+          } catch (azureError) {
+            console.error(`❌ Failed to upload cover image to Azure: ${azureError.message}`);
+            // Fallback to local storage
+            const localDir = path.join(__dirname, '../uploads/covers');
+            if (!fs.existsSync(localDir)) {
+              fs.mkdirSync(localDir, { recursive: true });
+            }
+            
+            const localPath = path.join(localDir, coverBlobName);
+            fs.writeFileSync(localPath, coverImage.buffer);
+            
+            // Store the local path
+            const relativePath = `uploads/covers/${coverBlobName}`;
+            req.files.coverImage[0].path = relativePath;
+            console.log(`📁 Fallback: Cover image saved locally at ${relativePath}`);
+          }
+        }
+        
+        // Log final paths
+        console.log('Final file paths for database:');
+        if (req.files.bookFile && req.files.bookFile[0]) {
+          console.log(`Book file path: ${req.files.bookFile[0].path}`);
+        }
+        if (req.files.coverImage && req.files.coverImage[0]) {
+          console.log(`Cover image path: ${req.files.coverImage[0].path}`);
+        }
+      }
+      
+      next();
+    } catch (error) {
+      console.error('File processing error:', error);
+      return res.status(500).json({ 
+        message: 'Error processing uploaded files', 
+        error: error.message 
+      });
+    }
   });
 };
 
-// Configure storage for user profile images
-const userProfileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/profiles/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Create wrapper for user profile image upload with Azure Blob Storage
 const uploadUserProfile = multer({
-  storage: userProfileStorage,
+  storage: memoryStorage, // Use memory storage for Azure uploads
   fileFilter: imageFileFilter,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
-});
+}).single('profilePicture');
 
-// Storage configuration for images
-const imageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads/covers'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, `cover-${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`);
-  },
-});
+// Middleware to process the uploaded profile picture and store in Azure Blob Storage
+const processProfileUpload = async (req, res, next) => {
+  if (!req.file) {
+    console.log('No profile picture uploaded, continuing with registration...');
+    return next(); // No file uploaded, continue
+  }
 
-// Storage configuration for PDFs
-const pdfStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads/books'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, `book-${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`);
-  },
-});
-
-// File filter for images
-const imageFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Not an image! Please upload an image file.'), false);
+  try {
+    console.log(`Processing profile picture upload to Azure for file: ${req.file.originalname}`);
+    console.log(`File size: ${req.file.size} bytes, MIME type: ${req.file.mimetype}`);
+    
+    // Generate a unique blob name
+    const profileBlobName = generateUniqueBlobName('profile', req.file.originalname);
+    
+    // Get content type based on file extension
+    const contentType = {
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.png': 'image/png',
+      '.gif': 'image/gif'
+    }[path.extname(req.file.originalname).toLowerCase()] || 'image/jpeg';
+    
+    console.log(`Uploading profile picture ${profileBlobName} with content type ${contentType}`);
+    
+    try {
+      // Upload to Azure Blob Storage
+      const profileUrl = await uploadBlob(
+        req.file.buffer,
+        profileBlobName,
+        contentType,
+        'uploads' // container name - must match the one configured
+      );
+      
+      console.log(`\u2705 Profile picture uploaded successfully to Azure: ${profileUrl}`);
+      
+      // Replace the file path with the Azure URL
+      req.file.path = profileUrl;
+      req.file.azure = true;
+    } catch (azureError) {
+      console.error(`\u274c Failed to upload profile picture to Azure: ${azureError.message}`);
+      // Fallback to local storage
+      const localDir = path.join(__dirname, '../uploads/profiles');
+      if (!fs.existsSync(localDir)) {
+        fs.mkdirSync(localDir, { recursive: true });
+      }
+      
+      const localPath = path.join(localDir, profileBlobName);
+      fs.writeFileSync(localPath, req.file.buffer);
+      
+      // Store the local path
+      const relativePath = `uploads/profiles/${profileBlobName}`;
+      req.file.path = relativePath;
+      console.log(`\ud83d\udcc1 Fallback: Profile picture saved locally at ${relativePath}`);
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Error processing profile picture:', error);
+    
+    // Set a default profile path if processing fails
+    const defaultProfilePath = 'public/default-profile.png';
+    req.file.path = defaultProfilePath;
+    
+    // Continue with registration despite error
+    console.log(`Continuing with registration using default profile image: ${defaultProfilePath}`);
+    next();
   }
 };
 
-// File filter for PDFs
+
+// PDF filter
 const pdfFilter = (req, file, cb) => {
   if (file.mimetype === 'application/pdf') {
     cb(null, true);
@@ -176,14 +298,22 @@ const pdfFilter = (req, file, cb) => {
   }
 };
 
+// Create Azure-based image uploader
 const uploadImage = multer({
-  storage: imageStorage,
-  fileFilter: imageFilter,
+  storage: memoryStorage,
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
 });
 
+// Create Azure-based PDF uploader
 const uploadPDF = multer({
-  storage: pdfStorage,
+  storage: memoryStorage,
   fileFilter: pdfFilter,
+  limits: {
+    fileSize: 20 * 1024 * 1024 // 20MB limit
+  }
 });
 
 module.exports = {
@@ -191,6 +321,7 @@ module.exports = {
   uploadCover,
   uploadBookFiles,
   uploadUserProfile,
+  processProfileUpload,
   uploadImage,
   uploadPDF
 };

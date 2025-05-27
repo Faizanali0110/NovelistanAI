@@ -6,23 +6,30 @@ const User = require('../models/User');
 const Book = require('../models/Book');
 const Review = require('../models/Review');
 const auth = require('../middleware/auth');
-const { uploadUserProfile } = require('../middleware/upload');
+const { uploadUserProfile, processProfileUpload } = require('../middleware/upload');
 const Author = require('../models/Author');
 const Customer = require('../models/Customer');
 const bcrypt = require('bcryptjs');
 
 // User registration
-router.post('/register', uploadUserProfile.single('profilePicture'), async (req, res) => {
+router.post('/register', uploadUserProfile, processProfileUpload, async (req, res) => {
   try {
     const { name, email, password, role, bio } = req.body;
+
+    console.log(`Processing registration for ${name} (${email}) as ${role}`);
 
     if (!role || !['author', 'customer'].includes(role)) {
       return res.status(400).json({ message: 'Role must be either author or customer' });
     }
 
+    // Check if email exists in either User, Author, or Customer models
     let existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    let existingAuthor = await Author.findOne({ email });
+    let existingCustomer = await Customer.findOne({ email });
+    
+    if (existingUser || existingAuthor || existingCustomer) {
+      console.log(`Registration failed: Email ${email} already exists`);
+      return res.status(400).json({ message: 'Email already registered. Please login or use a different email.' });
     }
 
     if (role === 'author') {
@@ -35,6 +42,8 @@ router.post('/register', uploadUserProfile.single('profilePicture'), async (req,
       });
 
       await author.save();
+      console.log(`Author ${name} registered successfully with ID: ${author._id}`);
+      
       const token = jwt.sign(
         { id: author._id, role: 'author' },
         process.env.JWT_SECRET || 'your_jwt_secret',
@@ -53,6 +62,8 @@ router.post('/register', uploadUserProfile.single('profilePicture'), async (req,
     });
 
     await customer.save();
+    console.log(`Customer ${name} registered successfully with ID: ${customer._id}`);
+    
     const token = jwt.sign(
       { id: customer._id, role: 'customer' },
       process.env.JWT_SECRET || 'your_jwt_secret',
@@ -62,12 +73,21 @@ router.post('/register', uploadUserProfile.single('profilePicture'), async (req,
     res.status(201).json({ token, customer });
   } catch (error) {
     console.error('User registration error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    
+    // Handle MongoDB duplicate key error
+    if (error.code === 11000) {
+      return res.status(400).json({ 
+        message: 'Email already registered. Please login or use a different email.', 
+        error: 'Duplicate email' 
+      });
+    }
+    
+    res.status(500).json({ message: 'Server error during registration', error: error.message });
   }
 });
 
 // Duplicate logic for /addUser
-router.post('/addUser', uploadUserProfile.single('profilePicture'), async (req, res) => {
+router.post('/addUser', uploadUserProfile, processProfileUpload, async (req, res) => {
   try {
     const { name, email, password } = req.body;
     
@@ -255,8 +275,8 @@ router.get('/customerImage/:userId', async (req, res) => {
       user = await User.findById(req.params.userId).select('profilePicture');
     }
     
-    // Default profile image path
-    const defaultProfilePath = path.join(__dirname, '../uploads/profiles/default-profile.png');
+    // Path to default profile image (stored locally in backend)
+    const defaultProfilePath = path.join(__dirname, '../public/default-profile.png');
     
     if (!user) {
       console.log('User not found, serving default profile image');
@@ -269,23 +289,52 @@ router.get('/customerImage/:userId', async (req, res) => {
       return res.sendFile(defaultProfilePath);
     }
     
-    // Try to serve the user's profile picture
-    const imagePath = path.resolve(user.profilePicture);
+    console.log(`Found profile picture: ${user.profilePicture}`);
     
-    // Check if file exists
-    const fs = require('fs');
-    if (!fs.existsSync(imagePath)) {
-      console.log('Profile picture not found, serving default');
-      return res.sendFile(defaultProfilePath);
+    // Handle Azure Blob Storage URLs (starts with https://)
+    if (user.profilePicture.startsWith('http')) {
+      console.log('Profile is in Azure, proxying image...');
+      
+      // Proxy the image request to avoid CORS issues
+      const axios = require('axios');
+      try {
+        const response = await axios.get(user.profilePicture, {
+          responseType: 'arraybuffer'
+        });
+        
+        // Set appropriate headers
+        const contentType = response.headers['content-type'] || 'image/jpeg';
+        res.set('Content-Type', contentType);
+        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        
+        // Send the image data
+        return res.send(response.data);
+      } catch (axiosError) {
+        console.error('Error proxying image from Azure:', axiosError.message);
+        return res.sendFile(defaultProfilePath);
+      }
     }
     
-    // Serve the image file
-    res.sendFile(imagePath);
+    // Legacy handling for local files (for backward compatibility)
+    try {
+      const imagePath = path.resolve(user.profilePicture);
+      // Check if file exists locally
+      const fs = require('fs');
+      if (fs.existsSync(imagePath)) {
+        console.log('Serving local profile image:', imagePath);
+        return res.sendFile(imagePath);
+      } else {
+        console.log('Local profile not found, serving default');
+        return res.sendFile(defaultProfilePath);
+      }
+    } catch (fsError) {
+      console.error('Error serving local profile:', fsError);
+      return res.sendFile(defaultProfilePath);
+    }
   } catch (error) {
     console.error('Error fetching user image:', error);
-    
     // Serve default image on error
-    const defaultProfilePath = path.join(__dirname, '../uploads/profiles/default-profile.png');
+    const defaultProfilePath = path.join(__dirname, '../public/default-profile.png');
     res.sendFile(defaultProfilePath);
   }
 });
@@ -311,18 +360,62 @@ router.get('/UserName/:userId', async (req, res) => {
   }
 });
 
-router.get('/customerImage/:userId', async (req, res) => {
+// This route is an alias of the one above, using the same proxy approach
+router.get('/image/:userId', async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select('profilePicture');
-    if (!user || !user.profilePicture) {
-      return res.status(404).json({ message: 'User profile image not found' });
+    // Try to find the user in either Customer or User model
+    let user = await Customer.findById(req.params.userId).select('profilePicture');
+    if (!user) {
+      user = await User.findById(req.params.userId).select('profilePicture');
     }
     
-    // Serve the image file
-    res.sendFile(path.resolve(user.profilePicture));
+    // Path to default profile image (stored locally)
+    const defaultProfilePath = path.join(__dirname, '../public/default-profile.png');
+    
+    if (!user || !user.profilePicture) {
+      console.log('User or profile picture not found, serving default');
+      return res.sendFile(defaultProfilePath);
+    }
+    
+    // Handle Azure Blob Storage URLs
+    if (user.profilePicture.startsWith('http')) {
+      console.log('Profile is in Azure, proxying image...');
+      
+      // Proxy the image request to avoid CORS issues
+      const axios = require('axios');
+      try {
+        const response = await axios.get(user.profilePicture, {
+          responseType: 'arraybuffer'
+        });
+        
+        // Set appropriate headers
+        const contentType = response.headers['content-type'] || 'image/jpeg';
+        res.set('Content-Type', contentType);
+        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        
+        // Send the image data
+        return res.send(response.data);
+      } catch (axiosError) {
+        console.error('Error proxying image from Azure:', axiosError.message);
+        return res.sendFile(defaultProfilePath);
+      }
+    }
+    
+    // Legacy support for local files
+    try {
+      const imagePath = path.resolve(user.profilePicture);
+      if (require('fs').existsSync(imagePath)) {
+        return res.sendFile(imagePath);
+      } else {
+        return res.sendFile(defaultProfilePath);
+      }
+    } catch (fsError) {
+      return res.sendFile(defaultProfilePath);
+    }
   } catch (error) {
     console.error('Error fetching user image:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    const defaultProfilePath = path.join(__dirname, '../public/default-profile.png');
+    res.sendFile(defaultProfilePath);
   }
 });
 

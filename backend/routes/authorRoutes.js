@@ -242,38 +242,44 @@ router.get('/authorImage/:userId', async (req, res) => {
     // Find the author by ID
     const author = await Author.findById(req.params.userId).select('profilePicture');
     
-    // Default profile image path
-    const defaultProfilePath = path.join(__dirname, '../uploads/profiles/default-profile.png');
+    // Default profile image URL (can be changed to an Azure default image URL)
+    const defaultProfileUrl = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
     
     if (!author) {
-      console.log('Author not found, serving default profile image');
-      return res.sendFile(defaultProfilePath);
+      console.log('Author not found, redirecting to default profile image');
+      return res.redirect(defaultProfileUrl);
     }
     
-    // If no profile picture, serve default image
+    // If no profile picture or if it's a local path (not yet migrated to Azure), redirect to default
     if (!author.profilePicture) {
-      console.log('No author profile picture, serving default');
-      return res.sendFile(defaultProfilePath);
+      console.log('No author profile picture, redirecting to default');
+      return res.redirect(defaultProfileUrl);
     }
     
-    // Try to serve the author's profile picture
-    const imagePath = path.resolve(author.profilePicture);
-    
-    // Check if file exists
-    const fs = require('fs');
-    if (!fs.existsSync(imagePath)) {
-      console.log('Author profile picture not found, serving default');
-      return res.sendFile(defaultProfilePath);
+    // If the profile picture is already an Azure URL (starts with https://), redirect to it
+    if (author.profilePicture.startsWith('https://')) {
+      return res.redirect(author.profilePicture);
     }
     
-    // Serve the image file
-    res.sendFile(imagePath);
+    // For backward compatibility - if it's a local path, try to serve it
+    // but in the future, all profile pictures should be Azure URLs
+    try {
+      const imagePath = path.resolve(author.profilePicture);
+      const fs = require('fs');
+      
+      if (fs.existsSync(imagePath)) {
+        return res.sendFile(imagePath);
+      } else {
+        console.log('Author profile picture not found, redirecting to default');
+        return res.redirect(defaultProfileUrl);
+      }
+    } catch (error) {
+      console.error('Error serving local profile picture:', error);
+      return res.redirect(defaultProfileUrl);
+    }
   } catch (error) {
     console.error('Error fetching author image:', error);
-    
-    // Serve default image on error
-    const defaultProfilePath = path.join(__dirname, '../uploads/profiles/default-profile.png');
-    res.sendFile(defaultProfilePath);
+    res.redirect('https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y');
   }
 });
 

@@ -1,6 +1,9 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const pdf = require('pdf-parse');
 const fs = require('fs').promises;
+const axios = require('axios');
+const path = require('path');
+const os = require('os');
 
 // Initialize Google Generative AI with the provided API key
 const genAI = new GoogleGenerativeAI(process.env.API_KEY || "AIzaSyBIPrq3d3OtwFrGLKFaY1MhmyoXa6tYgAQ");
@@ -16,12 +19,47 @@ const model = genAI.getGenerativeModel({
 
 /**
  * Extracts text from a PDF file
- * @param {string} filePath - Path to the PDF file
+ * @param {string} filePath - Path to the PDF file or Azure URL
  * @returns {Promise<string>} - Extracted text content
  */
 async function extractTextFromPdf(filePath) {
   try {
-    const dataBuffer = await fs.readFile(filePath);
+    let dataBuffer;
+    
+    // Check if the file path is an Azure URL
+    if (filePath.startsWith('http')) {
+      console.log(`Detected Azure URL: ${filePath}`);
+      
+      // Download the PDF from Azure
+      const tempFilePath = path.join(os.tmpdir(), `temp-book-${Date.now()}.pdf`);
+      
+      try {
+        const response = await axios.get(filePath, {
+          responseType: 'arraybuffer'
+        });
+        
+        // Save the file to a temporary location
+        await fs.writeFile(tempFilePath, Buffer.from(response.data));
+        console.log(`PDF downloaded to temporary file: ${tempFilePath}`);
+        
+        // Read the temporary file
+        dataBuffer = await fs.readFile(tempFilePath);
+        
+        // Clean up the temporary file
+        fs.unlink(tempFilePath).catch(err => {
+          console.warn(`Warning: Could not delete temporary file ${tempFilePath}:`, err);
+        });
+      } catch (downloadError) {
+        console.error('Error downloading PDF from Azure:', downloadError);
+        throw new Error('Could not download PDF from Azure');
+      }
+    } else {
+      // Local file path
+      console.log(`Reading local PDF file: ${filePath}`);
+      dataBuffer = await fs.readFile(filePath);
+    }
+    
+    // Parse the PDF
     const data = await pdf(dataBuffer);
     return data.text;
   } catch (error) {
