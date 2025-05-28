@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 import { Trash2, BookOpen, Search, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
-const API_BASE_URL = 'http://localhost:8082';
+import API_BASE_URL from '../config';
 
 const DeleteBook = () => {
   const { isDark } = useTheme();

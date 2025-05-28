@@ -37,31 +37,21 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/noveli
 // 2. Middleware
 // ======================
 
-// CORS Configuration
+// CORS Configuration for both local development and Netlify serverless functions
 const configureCors = (req, res, next) => {
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'http://localhost:5178',
-    'http://localhost:5180',
-    'http://localhost:5173',
-    'https://novelistan-ai-ewj8.vercel.app',
-    'https://novelistan-ai-ewj8-p50pn7qbz-01-131222-017-bahriaedups-projects.vercel.app'
-  ];
-  
+  // Get the origin from request headers or use wildcard
   const origin = req.headers.origin;
   
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
+  // Set CORS headers
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    res.status(200).end();
+    return;
   }
   
   next();

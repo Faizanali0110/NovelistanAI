@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 import { Edit2, BookOpen, Search, X } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
-const API_BASE_URL = 'http://localhost:8082';
+import API_BASE_URL from '../config';
 
 const UpdateBook = () => {
   const { isDark } = useTheme();

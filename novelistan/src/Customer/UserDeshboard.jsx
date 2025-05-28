@@ -6,6 +6,7 @@ import Cookies from 'js-cookie';
 import { Book, Star, Clock, BookOpen, BookMarked, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import API_BASE_URL from '../config';
 
 const UserDeshboard = () => {
   const [userImage, setUserImage] = useState(null);
@@ -29,8 +30,7 @@ const UserDeshboard = () => {
       return; // Prevent further execution
     }
 
-    // Import API_BASE_URL for consistency
-    const API_BASE_URL = "http://localhost:8082";
+    // API_BASE_URL is now imported at the top of the file
     
     // Fetch User image from API
     axios

@@ -4,14 +4,13 @@ import { BookOpen, Menu, X, Bell, Search, Sun, Moon, User, Book, PenTool } from 
 import { useTheme } from '../contexts/ThemeContext';
 import Cookies from 'js-cookie';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 // Default avatar constants
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User&background=ffe066&color=7d5a00&rounded=true&size=96";
 const DEFAULT_AVATAR_DARK = "https://ui-avatars.com/api/?name=User&background=5f4d00&color=ffe066&rounded=true&size=96";
 const AUTHOR_DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=Author&background=ffd580&color=8c5000&rounded=true&size=96";
 const AUTHOR_DEFAULT_AVATAR_DARK = "https://ui-avatars.com/api/?name=Author&background=704000&color=ffd580&rounded=true&size=96";
-
-const API_BASE_URL = "http://localhost:8082";
 
 const SharedHeader = ({ userRole = 'customer' }) => {
   const { isDark, toggleDarkMode } = useTheme();

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Cookies from 'js-cookie';
 import { useTheme } from '../contexts/ThemeContext';
 import { BookOpen, ImagePlus, CheckCircle, AlertCircle, BookPlus } from 'lucide-react';
+import API_BASE_URL from '../config';
 
 const AddBook = () => {
   const { isDark } = useTheme();
@@ -79,7 +80,7 @@ const AddBook = () => {
       const token = Cookies.get('token') || localStorage.getItem('token');
       console.log('Token:', token); // Log token for debugging
 
-      const response = await fetch('http://localhost:8082/api/book/addBook', {
+      const response = await fetch(`${API_BASE_URL}/api/book/addBook`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

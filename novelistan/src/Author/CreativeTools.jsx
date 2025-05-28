@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Cookies from 'js-cookie';
 
 // Define API base URL
-const API_BASE_URL = 'http://localhost:8082';
+import API_BASE_URL from '../config';
 
 const CreativeTools = () => {
   const { bookId } = useParams();
