@@ -23,17 +23,38 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      - name: Backend - npm install, build, and test
         run: |
+          cd backend
           npm install
           npm run build --if-present
           npm run test --if-present
-      
+
+      - name: Frontend - npm install, build, and test
+        run: |
+          cd novelistan
+          npm install
+          npm run build --if-present
+
+      - name: Build frontend assets
+        run: |
+          cd novelistan
+          # Copy the build output to the backend/public directory if needed
+          if (-not (Test-Path -Path "../backend/public/frontend")) {
+            New-Item -ItemType Directory -Path "../backend/public/frontend" -Force
+          }
+          if (Test-Path -Path "dist") {
+            Copy-Item -Path "dist/*" -Destination "../backend/public/frontend/" -Recurse -Force
+          } else {
+            echo "Frontend dist directory not found, skipping copy"
+          }
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: backend
+          # Only include backend files for Azure deployment
 
   deploy:
     runs-on: ubuntu-latest
