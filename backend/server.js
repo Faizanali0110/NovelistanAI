@@ -37,13 +37,27 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/noveli
 // 2. Middleware
 // ======================
 
-// CORS Configuration for both local development and Netlify serverless functions
+// CORS Configuration for both local development and production deployments
 const configureCors = (req, res, next) => {
-  // Get the origin from request headers or use wildcard
+  // Get the origin from request headers
   const origin = req.headers.origin;
   
-  // Set CORS headers
-  res.header('Access-Control-Allow-Origin', '*');
+  // Define allowed origins
+  const allowedOrigins = [
+    'http://localhost:3000',             // Local frontend
+    'http://localhost:5173',             // Vite dev server
+    'https://novelistan-ai-ewj8.vercel.app', // Vercel deployment
+    'https://novelistanai.azurewebsites.net'  // Azure backend URL
+  ];
+  
+  // Set CORS headers - only allow requests from specified origins
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    // For local development and testing
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
