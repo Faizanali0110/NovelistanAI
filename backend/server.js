@@ -8,6 +8,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const logger = require('./utils/logger');
 
 // Import routes
 const bookRoutes = require('./routes/bookRoutes');
@@ -17,6 +18,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const authorToolsRoutes = require('./routes/authorToolsRoutes');
 const readingExperienceRoutes = require('./routes/readingExperienceRoutes');
+const diagnosticRoutes = require('./routes/diagnosticRoutes');
 
 // Import models
 const User = require('./models/User');
@@ -103,20 +105,35 @@ app.get('/api/files/:type/:filename', async (req, res) => {
     const { type, filename } = req.params;
     const localPath = path.join(__dirname, 'uploads', type, filename);
     
+    logger.debug('File request received', {
+      type,
+      filename,
+      localPath,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    });
+    
     // Check if the file exists locally first
     if (fs.existsSync(localPath)) {
-      console.log(`Serving local file: ${localPath}`);
+      logger.info(`Serving local file`, { path: localPath });
       return res.sendFile(localPath);
     }
     
     // If not local, try to proxy from Azure
     const azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
-    console.log(`Proxying to Azure: ${azureUrl}`);
+    logger.azure('FileProxy', 'Redirecting', { 
+      originalUrl: req.originalUrl,
+      targetUrl: azureUrl
+    });
     
     // Redirect to Azure URL
     return res.redirect(azureUrl);
   } catch (error) {
-    console.error('Error serving file:', error);
+    logger.error('Error serving file', { 
+      type: req.params.type,
+      filename: req.params.filename,
+      originalUrl: req.originalUrl
+    }, error);
     return res.status(404).json({ message: 'File not found' });
   }
 });
@@ -132,15 +149,23 @@ app.get('/azure/file', async (req, res) => {
     const { url } = req.query;
     
     if (!url) {
+      logger.warn('Azure file proxy called without URL parameter', { 
+        ip: req.ip,
+        headers: req.headers
+      });
       return res.status(400).json({ message: 'URL parameter is required' });
     }
     
     // Validate the URL to ensure it's from our Azure storage account
     if (!url.includes('novelistanupload.blob.core.windows.net')) {
+      logger.warn('Azure file proxy called with invalid URL', { 
+        url,
+        ip: req.ip
+      });
       return res.status(400).json({ message: 'Invalid URL' });
     }
     
-    console.log(`Proxying request to Azure for: ${url}`);
+    logger.azure('FileProxy', 'Requesting file', { url });
     
     // Import axios
     const axios = require('axios');
@@ -155,11 +180,28 @@ app.get('/azure/file', async (req, res) => {
     res.set('Content-Type', contentType);
     res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
     
+    logger.azure('FileProxy', 'Success', { 
+      url,
+      contentType,
+      contentLength: response.data.length
+    });
+    
     // Send the file data
     return res.send(response.data);
   } catch (error) {
-    console.error(`Error proxying file from Azure: ${error.message}`);
-    return res.status(500).json({ message: 'Error retrieving file from storage' });
+    logger.error('Azure file proxy error', { 
+      url: req.query.url,
+      errorStatus: error.response?.status,
+      errorMessage: error.message
+    }, error);
+    
+    // Return a more helpful error message with troubleshooting info
+    return res.status(500).json({ 
+      message: 'Error retrieving file from Azure storage', 
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      errorCode: error.code || error.response?.status || 'unknown',
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
@@ -224,15 +266,36 @@ app.get('/uploads/:type/:filename', async (req, res) => {
 // 3. Database Connection
 // ======================
 const connectDB = async () => {
+  logger.startup('MongoDB', 'Connecting', {
+    uri: MONGODB_URI.replace(/\/\/(.+?)@/, '//[REDACTED]@'), // Redact credentials
+    options: {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    }
+  });
+  
   try {
     await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('Connected to MongoDB');
+    logger.startup('MongoDB', 'Connected successfully');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    process.exit(1);
+    logger.critical('MongoDB connection failed', {
+      errorName: error.name,
+      errorCode: error.code || 'unknown',
+      hosts: error.message?.includes('failed to connect') ? error.message.match(/connect to ([^:]+)/)?.[1] : 'unknown'
+    }, error);
+    
+    // Don't exit immediately in production to allow for error logging
+    if (process.env.NODE_ENV === 'production') {
+      logger.critical('Server cannot start without database', {
+        action: 'Delayed process exit (5s)'
+      });
+      setTimeout(() => process.exit(1), 5000); // Give logs time to flush
+    } else {
+      process.exit(1);
+    }
   }
 };
 
@@ -244,6 +307,7 @@ const connectDB = async () => {
 app.use('/api/book', bookRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/diagnostics', diagnosticRoutes);
 // Create a separate customer routes from userRoutes
 const customerRoutes = express.Router();
 
@@ -481,8 +545,8 @@ if (frontendBuildPath) {
     // Skip API routes
     if (req.path.startsWith('/api/')) {
       return res.status(404).json({ 
-        success: false, 
-        message: 'API route not found', 
+        success: false,
+        message: 'API route not found',
         path: req.originalUrl
       });
     }
@@ -510,7 +574,6 @@ if (frontendBuildPath) {
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
-  
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
   
@@ -524,16 +587,73 @@ app.use((err, req, res, next) => {
 // ======================
 // 6. Start Server
 // ======================
+
+// Enhanced Azure storage configuration logging
+logger.azure('Configuration', 'Checking', {
+  accountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+  containerName: process.env.AZURE_STORAGE_CONTAINER_NAME,
+  sasTokenPresent: !!process.env.AZURE_STORAGE_SAS_TOKEN,
+  sasTokenLength: process.env.AZURE_STORAGE_SAS_TOKEN ? process.env.AZURE_STORAGE_SAS_TOKEN.length : 0
+});
+
+// Log crucial environment variables for Azure diagnostics
+logger.startup('Environment', 'Checking variables', {
+  nodeEnv: process.env.NODE_ENV || 'not set',
+  port: process.env.PORT || '8082 (default)',
+  mongoDbUriPresent: !!process.env.MONGODB_URI,
+  jwtSecretPresent: !!process.env.JWT_SECRET,
+  azureStorageVariables: {
+    accountNamePresent: !!process.env.AZURE_STORAGE_ACCOUNT_NAME,
+    accountKeyPresent: !!process.env.AZURE_STORAGE_ACCOUNT_KEY,
+    sasTokenPresent: !!process.env.AZURE_STORAGE_SAS_TOKEN,
+    containerNamePresent: !!process.env.AZURE_STORAGE_CONTAINER_NAME
+  }
+});
+
 const startServer = async () => {
   try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    // Log system information for diagnostics
+    logger.startup('System', 'Starting', {
+      nodeVersion: process.version,
+      platform: process.platform,
+      architecture: process.arch,
+      memoryUsage: process.memoryUsage(),
+      environment: process.env.NODE_ENV || 'development',
+      port: PORT
     });
+    
+    await connectDB();
+    
+    // Start the server
+    app.listen(PORT, () => {
+      logger.startup('Server', 'Started successfully', {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        pid: process.pid,
+        uptime: process.uptime()
+      });
+      
+      // Additional startup diagnostics
+      logger.azure('Status', 'Checking', {
+        isAzureConfigured: true,
+        blobStorageReady: true
+      });
+    });
+    
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    logger.critical('Server startup failed', { 
+      phase: 'initialization'
+    }, error);
+    
+    // Don't exit immediately in production to allow for error logging
+    if (process.env.NODE_ENV === 'production') {
+      logger.critical('Server failed to start', {
+        action: 'Delayed process exit (5s)'
+      });
+      setTimeout(() => process.exit(1), 5000); // Give logs time to flush
+    } else {
+      process.exit(1);
+    }
   }
 };
 
@@ -615,10 +735,36 @@ startServer();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
+  logger.critical('Unhandled Promise Rejection', {
+    errorName: err.name,
+    stack: err.stack ? err.stack.split('\n').slice(0, 3).join('\n') : 'No stack trace'
+  }, err);
+  
   // In production, don't exit the process as it would crash the server
   if (process.env.NODE_ENV === 'development') {
     process.exit(1);
   }
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  logger.critical('Uncaught Exception', {
+    errorName: err.name,
+    stack: err.stack ? err.stack.split('\n').slice(0, 3).join('\n') : 'No stack trace'
+  }, err);
+  
+  // In production, give time for logs to be written before exiting
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(() => process.exit(1), 3000);
+  } else {
+    process.exit(1);
+  }
+});
+
+// Log process termination
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  // Close any open connections, etc.
+  process.exit(0);
 });
 
