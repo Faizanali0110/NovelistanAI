@@ -768,3 +768,7 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
+app.use(express.static("./novelistan/build"));
+app.get("*",(req,res)=>{
+  res.sendFile(path.resolve(__dirname,"novelistan","build","index.html"))
+});
