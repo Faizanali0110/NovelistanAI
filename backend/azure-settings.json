@@ -1,7 +1,12 @@
 {
   "name": "appsettings",
   "value": {
+    "NOTE": "This is a template file. Actual secrets should be configured in Azure App Service settings.",
     "NODE_ENV": "production",
-    "WEBSITE_NODE_DEFAULT_VERSION": "~22"
+    "WEBSITE_NODE_DEFAULT_VERSION": "~22",
+    "MONGODB_URI": "YOUR_MONGODB_CONNECTION_STRING",
+    "JWT_SECRET": "YOUR_JWT_SECRET",
+    "AZURE_STORAGE_ACCOUNT_NAME": "YOUR_STORAGE_ACCOUNT_NAME",
+    "AZURE_STORAGE_CONTAINER_NAME": "YOUR_CONTAINER_NAME"
   }
 }
