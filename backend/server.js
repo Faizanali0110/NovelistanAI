@@ -1,5 +1,16 @@
 // Load environment variables
-require('dotenv').config();
+try {
+  require('dotenv').config();
+  console.log('Environment setup complete');
+  // Print important environment variables (without sensitive values)
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('PORT:', process.env.PORT);
+  console.log('MongoDB connection available:', !!process.env.MONGODB_URI);
+  console.log('JWT_SECRET available:', !!process.env.JWT_SECRET);
+  console.log('Azure Storage available:', !!process.env.AZURE_STORAGE_ACCOUNT_NAME);
+} catch (err) {
+  console.error('Error loading environment variables:', err);
+}
 
 // Import required modules
 const express = require('express');
@@ -32,6 +43,29 @@ const app = express();
 // ======================
 const PORT = process.env.PORT || 8082;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/novelistan';
+
+// MongoDB Connection Function
+async function connectDB() {
+  try {
+    console.log('Attempting to connect to MongoDB with URI:', MONGODB_URI.substring(0, 20) + '...');
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s
+    });
+    console.log('Connected to MongoDB successfully');
+    return true;
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    // In production, don't crash the server if DB is unreachable temporarily
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('Running without database in production mode - some features will be limited');
+      return false;
+    } else {
+      throw error; // In development, we want to fail fast
+    }
+  }
+}
 
 // ======================
 // 2. Middleware
@@ -70,10 +104,10 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add global error handler
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error', message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong' });
+// Request logging middleware (keeping this one)
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
 });
 
 app.use(express.json());
@@ -479,14 +513,35 @@ app.use((err, req, res, next) => {
 // ======================
 const startServer = async () => {
   try {
-    await connectDB();
+    // Try to connect to MongoDB but don't crash the server in production if it fails
+    let dbConnected = false;
+    try {
+      dbConnected = await connectDB();
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      if (process.env.NODE_ENV !== 'production') {
+        // Only exit in development to fail fast
+        console.error('Exiting due to database connection failure in development mode');
+        process.exit(1);
+      }
+    }
+
+    // Start the Express server
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('===============================================');
+      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📦 Database connected: ${dbConnected ? 'Yes' : 'No'}`);
+      console.log(`🔐 Authentication enabled: ${!!process.env.JWT_SECRET}`);
+      console.log(`📁 Azure Storage configured: ${!!process.env.AZURE_STORAGE_ACCOUNT_NAME}`);
+      console.log('===============================================');
     });
   } catch (error) {
     console.error('Failed to start server:', error);
-    process.exit(1);
+    // In production, we'll log the error but try to keep the server running if possible
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 
