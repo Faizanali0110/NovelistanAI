@@ -116,8 +116,20 @@ app.get('/api/files/:type/:filename', async (req, res) => {
     }
     
     // If file not found locally, try to get from Azure
-    const azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
-    logger.info('Redirecting to Azure storage', { azureUrl });
+    // The URL format in Azure is different depending on the file type
+    let azureUrl;
+    
+    // Construct the correct URL based on the file type and user role
+    if (type === 'profiles') {
+      azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/profiles-${filename}`;
+    } else if (type === 'books' || type === 'covers') {
+      azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
+    } else {
+      // For any other type, use a general format
+      azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
+    }
+    
+    logger.info('Redirecting to Azure storage', { type, filename, azureUrl });
     
     // Redirect to the Azure URL
     return res.redirect(azureUrl);
