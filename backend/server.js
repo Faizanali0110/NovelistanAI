@@ -37,42 +37,45 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/noveli
 // 2. Middleware
 // ======================
 
-// CORS Configuration for both local development and production deployments
-const configureCors = (req, res, next) => {
-  // Get the origin from request headers
-  const origin = req.headers.origin;
-  
-  // Define allowed origins
-  const allowedOrigins = [
-    'http://localhost:3000',             // Local frontend
-    'http://localhost:5173',             // Vite dev server
-    'https://novelistan-ai-ewj8.vercel.app', // Vercel deployment
-    'https://novelistanai.azurewebsites.net',  // Old Azure backend URL
-    'https://novelistanai-ecdfcwewg5brgucz.canadacentral-01.azurewebsites.net' // New Azure backend URL
-  ];
-  
-  // Set CORS headers - only allow requests from specified origins
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    // For local development and testing
-    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-  }
-  
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-};
+// Use standard CORS middleware for simplicity and reliability
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://novelistan-ai-ewj8.vercel.app',
+      'https://novelistanai.azurewebsites.net',
+      'https://novelistanai-ecdfcwewg5brgucz.canadacentral-01.azurewebsites.net'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
 
-app.use(configureCors);
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Add global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error', message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong' });
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -504,34 +507,71 @@ app.get('/getMessage', (req, res) => {
   });
 });
 
+// Production static file serving - MUST be before starting the server
+console.log('Setting up static file serving...');
+
+// Check if we're in the Azure deployment environment
+const frontendPath = path.join(__dirname, 'public', 'frontend');
+const buildPath = path.join(__dirname, '..', 'novelistan', 'build');
+
+// Debug paths for Azure troubleshooting
+console.log('Current directory:', __dirname);
+console.log('Checking frontend path:', frontendPath);
+console.log('Checking build path:', buildPath);
+console.log('Directory exists - frontend:', fs.existsSync(frontendPath));
+console.log('Directory exists - build:', fs.existsSync(buildPath));
+
+// First try the Azure deployment path (public/frontend)
+if (fs.existsSync(frontendPath)) {
+  console.log('Serving frontend from:', frontendPath);
+  app.use(express.static(frontendPath, { maxAge: '1d' }));
+  app.get('*', (req, res) => {
+    try {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+      }
+    } catch (err) {
+      console.error('Error sending index.html:', err);
+      res.status(500).send('Error loading application');
+    }
+  });
+} 
+// Then try the local build path
+else if (fs.existsSync(buildPath)) {
+  console.log('Serving frontend from:', buildPath);
+  app.use(express.static(buildPath, { maxAge: '1d' }));
+  app.get('*', (req, res) => {
+    try {
+      if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(buildPath, 'index.html'));
+      }
+    } catch (err) {
+      console.error('Error sending index.html:', err);
+      res.status(500).send('Error loading application');
+    }
+  });
+} else {
+  console.log('WARNING: No frontend build directory found!');
+}
+
+// Final error handler - must be after all other middleware and routes
+app.use((err, req, res, next) => {
+  console.error('Unhandled server error:', err);
+  res.status(500).json({ 
+    error: 'Internal server error', 
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong' 
+  });
+});
+
 // Start the server
 startServer();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
-  process.exit(1);
+  // In production, don't exit the process as it would crash the server
+  if (process.env.NODE_ENV === 'development') {
+    process.exit(1);
+  }
 });
-
-// Production static file serving
-// Check if we're in the Azure deployment environment
-const frontendPath = path.join(__dirname, 'public', 'frontend');
-const buildPath = path.join(__dirname, '..', 'novelistan', 'build');
-
-// First try the Azure deployment path (public/frontend)
-if (fs.existsSync(frontendPath)) {
-  console.log('Serving frontend from:', frontendPath);
-  app.use(express.static(frontendPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(frontendPath, 'index.html'));
-  });
-} 
-// Then try the local build path
-else if (fs.existsSync(buildPath)) {
-  console.log('Serving frontend from:', buildPath);
-  app.use(express.static(buildPath));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(buildPath, 'index.html'));
-  });
-}
 
