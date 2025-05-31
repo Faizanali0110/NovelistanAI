@@ -3,6 +3,6 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 
 // Choose API URL based on environment
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (isLocalhost ? 'http://localhost:8082' : 'https://novelistanai-ecdfcwewg5brgucz.canadacentral-01.azurewebsites.net/');
+  (isLocalhost ? 'http://localhost:8082' : 'https://novelistanai.azurewebsites.net');
 
 export default API_BASE_URL;
