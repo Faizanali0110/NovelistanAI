@@ -768,7 +768,15 @@ process.on('SIGTERM', () => {
   process.exit(0);
 });
 
-app.use(express.static("./novelistan/build"));
-app.get("*",(req,res)=>{
-  res.sendFile(path.resolve(__dirname,"novelistan","build","index.html"))
+// Serve static frontend files built by GitHub Actions workflow
+app.use(express.static(path.join(__dirname, 'public', 'frontend')));
+
+// React app route handler - serves index.html for all non-API routes
+app.get('*', (req, res) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  // Serve the React app's index.html for all other routes
+  res.sendFile(path.join(__dirname, 'public', 'frontend', 'index.html'));
 });
