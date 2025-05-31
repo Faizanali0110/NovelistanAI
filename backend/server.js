@@ -8,7 +8,6 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 
 // Import routes
 const bookRoutes = require('./routes/bookRoutes');
@@ -48,7 +47,8 @@ const configureCors = (req, res, next) => {
     'http://localhost:3000',             // Local frontend
     'http://localhost:5173',             // Vite dev server
     'https://novelistan-ai-ewj8.vercel.app', // Vercel deployment
-    'https://novelistanai.azurewebsites.net'  // Azure backend URL
+    'https://novelistanai.azurewebsites.net',  // Old Azure backend URL
+    'https://novelistanai-ecdfcwewg5brgucz.canadacentral-01.azurewebsites.net' // New Azure backend URL
   ];
   
   // Set CORS headers - only allow requests from specified origins
@@ -513,9 +513,25 @@ process.on('unhandledRejection', (err) => {
   process.exit(1);
 });
 
-// producion script
-app.use(express.static('./novelistan/build  '));
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'novelistan', 'build', 'index.html'));
-});
+// Production static file serving
+// Check if we're in the Azure deployment environment
+const frontendPath = path.join(__dirname, 'public', 'frontend');
+const buildPath = path.join(__dirname, '..', 'novelistan', 'build');
+
+// First try the Azure deployment path (public/frontend)
+if (fs.existsSync(frontendPath)) {
+  console.log('Serving frontend from:', frontendPath);
+  app.use(express.static(frontendPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+} 
+// Then try the local build path
+else if (fs.existsSync(buildPath)) {
+  console.log('Serving frontend from:', buildPath);
+  app.use(express.static(buildPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
 
