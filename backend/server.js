@@ -482,17 +482,64 @@ app.use((req, res, next) => {
   next();
 });
 
-// 404 Handler
-app.use((req, res) => {
-  console.log(`[404] Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ 
-    success: false, 
-    message: 'Route not found', 
-    path: req.originalUrl,
-    method: req.method,
-    timestamp: new Date().toISOString()
+// Serve static files for the React frontend
+// Check for different possible build output locations
+const possibleFrontendPaths = [
+  path.join(__dirname, 'public', 'frontend'),  // Azure deployment from GitHub Actions
+  path.join(__dirname, 'public'),              // Direct build output
+  path.join(__dirname, '..', 'novelistan', 'build'), // Local development
+  path.join(__dirname, '..', 'novelistan', 'dist')   // Vite build output
+];
+
+// Find the first path that exists and log all paths checked
+console.log('Checking for frontend build paths:');
+possibleFrontendPaths.forEach(path => console.log(` - ${path}`));
+
+// Frontend path variable will be defined later
+let frontendBuildPath = null;
+for (const pathToCheck of possibleFrontendPaths) {
+  if (fs.existsSync(pathToCheck)) {
+    console.log(`✅ Frontend build found at: ${pathToCheck}`);
+    frontendBuildPath = pathToCheck;
+    break;
+  }
+}
+
+if (frontendBuildPath) {
+  // Serve static files
+  console.log(`Serving static files from: ${frontendBuildPath}`);
+  app.use(express.static(frontendBuildPath));
+  
+  // Catch-all route for SPA client-side routing
+  app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'API route not found', 
+        path: req.originalUrl
+      });
+    }
+    
+    // Serve the React app for all other routes
+    console.log(`Serving frontend for path: ${req.originalUrl}`);
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
-});
+} else {
+  console.warn('WARNING: No frontend build found! The application will only serve API endpoints.');
+  
+  // 404 Handler for API routes only
+  app.use((req, res) => {
+    console.log(`[404] Route not found: ${req.method} ${req.originalUrl}`);
+    res.status(404).json({ 
+      success: false, 
+      message: 'Route not found', 
+      path: req.originalUrl,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
+  });
+}
 
 // Global Error Handler
 app.use((err, req, res, next) => {

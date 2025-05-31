@@ -39,14 +39,31 @@ jobs:
       - name: Build frontend assets
         run: |
           cd novelistan
-          # Copy the build output to the backend/public directory if needed
-          if (-not (Test-Path -Path "../backend/public/frontend")) {
-            New-Item -ItemType Directory -Path "../backend/public/frontend" -Force
-          }
+          # Verify build output exists
           if (Test-Path -Path "dist") {
-            Copy-Item -Path "dist/*" -Destination "../backend/public/frontend/" -Recurse -Force
+            echo "Frontend build output found in dist directory"
           } else {
-            echo "Frontend dist directory not found, skipping copy"
+            echo "ERROR: Frontend dist directory not found! Build may have failed."
+            exit 1
+          }
+          
+          # Ensure target directory exists and is empty
+          echo "Creating clean frontend directory in backend/public/frontend"
+          if (Test-Path -Path "../backend/public/frontend") {
+            Remove-Item -Path "../backend/public/frontend" -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path "../backend/public/frontend" -Force
+          
+          # Copy frontend build files to backend/public/frontend
+          echo "Copying frontend build to backend/public/frontend"
+          Copy-Item -Path "dist/*" -Destination "../backend/public/frontend/" -Recurse -Force
+          
+          # Verify copy was successful
+          if (Test-Path -Path "../backend/public/frontend/index.html") {
+            echo "Frontend successfully copied to backend/public/frontend"
+          } else {
+            echo "ERROR: Frontend copy failed! index.html not found in destination."
+            exit 1
           }
 
       - name: Upload artifact for deployment job
