@@ -97,6 +97,9 @@ ensureDir(path.join(__dirname, 'public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+// Need to import axios for HTTP requests
+const axios = require('axios');
+
 // File serving route for both local files and Azure storage
 app.get('/api/files/:type/:filename', async (req, res) => {
   try {
@@ -119,20 +122,51 @@ app.get('/api/files/:type/:filename', async (req, res) => {
     // The URL format in Azure is different depending on the file type
     let azureUrl;
     
-    // Construct the correct URL based on the file type and user role
+    // Construct the correct URL based on the file type
     if (type === 'profiles') {
       azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/profiles-${filename}`;
-    } else if (type === 'books' || type === 'covers') {
-      azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
+    } else if (type === 'books') {
+      azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/books-${filename}`;
+    } else if (type === 'covers') {
+      azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/covers-${filename}`;
     } else {
       // For any other type, use a general format
       azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
     }
     
-    logger.info('Redirecting to Azure storage', { type, filename, azureUrl });
+    logger.info('Fetching file from Azure', { type, filename, azureUrl });
     
-    // Redirect to the Azure URL
-    return res.redirect(azureUrl);
+    // Instead of redirecting, we'll proxy the request to Azure
+    try {
+      // Get the file from Azure with axios
+      const response = await axios({
+        method: 'get',
+        url: azureUrl,
+        responseType: 'stream'
+      });
+      
+      // Set the appropriate content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      if (ext === '.pdf') {
+        res.setHeader('Content-Type', 'application/pdf');
+      } else if (ext === '.jpg' || ext === '.jpeg') {
+        res.setHeader('Content-Type', 'image/jpeg');
+      } else if (ext === '.png') {
+        res.setHeader('Content-Type', 'image/png');
+      }
+      
+      // Pipe the file stream directly to the response
+      logger.info('Successfully fetched file from Azure', { type, filename });
+      return response.data.pipe(res);
+    } catch (azureError) {
+      logger.error('Failed to fetch file from Azure', { 
+        error: azureError.message,
+        url: azureUrl,
+        type,
+        filename
+      });
+      return res.status(404).json({ message: 'File not found in Azure storage' });
+    }
   } catch (error) {
     logger.error('File proxy error', {
       params: req.params,
