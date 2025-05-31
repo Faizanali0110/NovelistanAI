@@ -97,7 +97,7 @@ ensureDir(path.join(__dirname, 'public'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
-// File serving route for local files
+// File serving route for both local files and Azure storage
 app.get('/api/files/:type/:filename', async (req, res) => {
   try {
     const { type, filename } = req.params;
@@ -115,8 +115,12 @@ app.get('/api/files/:type/:filename', async (req, res) => {
       return res.sendFile(localPath);
     }
     
-    // File not found
-    return res.status(404).json({ message: 'File not found' });
+    // If file not found locally, try to get from Azure
+    const azureUrl = `https://novelistanupload.blob.core.windows.net/uploads/${type}-${filename}`;
+    logger.info('Redirecting to Azure storage', { azureUrl });
+    
+    // Redirect to the Azure URL
+    return res.redirect(azureUrl);
   } catch (error) {
     logger.error('File proxy error', {
       params: req.params,
