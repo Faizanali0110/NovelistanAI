@@ -287,4 +287,48 @@ router.get('/azure-test', async (req, res) => {
   }
 });
 
+// Simple log viewer endpoint (TEMPORARY - REMOVE IN PRODUCTION)
+router.get('/logs', (req, res) => {
+  // Check for a simple password to prevent unauthorized access
+  const providedKey = req.query.key;
+  const expectedKey = 'novelistan-debug'; // Simple protection
+  
+  if (providedKey !== expectedKey) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  try {
+    // Create a simple in-memory log collector
+    const logs = {
+      environment: process.env.NODE_ENV || 'unknown',
+      serverTime: new Date().toISOString(),
+      nodeVersion: process.version,
+      memoryUsage: process.memoryUsage(),
+      envVarsPresent: {
+        PORT: !!process.env.PORT,
+        MONGODB_URI: !!process.env.MONGODB_URI,
+        JWT_SECRET: !!process.env.JWT_SECRET,
+        AZURE_STORAGE_ACCOUNT_NAME: !!process.env.AZURE_STORAGE_ACCOUNT_NAME,
+        AZURE_STORAGE_ACCOUNT_KEY: !!process.env.AZURE_STORAGE_ACCOUNT_KEY,
+        AZURE_STORAGE_CONTAINER_NAME: !!process.env.AZURE_STORAGE_CONTAINER_NAME,
+        AZURE_STORAGE_SAS_TOKEN: !!process.env.AZURE_STORAGE_SAS_TOKEN,
+      },
+      mongoConnectionState: mongoose.connection.readyState,
+      sasTokenLength: process.env.AZURE_STORAGE_SAS_TOKEN ? process.env.AZURE_STORAGE_SAS_TOKEN.length : 0,
+      // Include SAS token expiry date if present
+      sasTokenExpiry: process.env.AZURE_STORAGE_SAS_TOKEN && process.env.AZURE_STORAGE_SAS_TOKEN.includes('se=') 
+        ? process.env.AZURE_STORAGE_SAS_TOKEN.match(/se=([^&]+)/)?.[1] || 'unknown' 
+        : 'unknown'
+    };
+    
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Error generating logs', 
+      message: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 module.exports = router;
