@@ -50,6 +50,7 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5173',
+      'http://localhost:5174',
       'https://novelistan-ai-ewj8.vercel.app'
     ];
     

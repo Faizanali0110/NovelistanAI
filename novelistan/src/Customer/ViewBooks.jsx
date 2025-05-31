@@ -200,8 +200,14 @@ const ViewBooks = () => {
       const filePath = book.bookFile;
       const fileName = filePath.split('\\').pop().split('/').pop();
       
-      // Open the PDF in a new tab
-      window.open(`${API_BASE_URL}/${filePath}`, '_blank');
+      // Check if the file path is already a complete URL (starts with http:// or https://)
+      if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+        // It's a full URL (Azure Blob Storage), open it directly
+        window.open(filePath, '_blank');
+      } else {
+        // It's a relative path, prepend the API base URL
+        window.open(`${API_BASE_URL}/${filePath}`, '_blank');
+      }
     } catch (error) {
       console.error('Error viewing PDF:', error);
       alert('Failed to open PDF. Please try again later.');
@@ -312,8 +318,15 @@ const ViewBooks = () => {
       return "https://placehold.co/200x300/yellow/white?text=No+Cover";
     }
     
-    // Return the cover image URL using the path stored in the book object
-    return `${API_BASE_URL}/${book.coverImage}`;
+    const coverPath = book.coverImage;
+    
+    if (coverPath.startsWith('http://') || coverPath.startsWith('https://')) {
+      // If it's already a full URL (Azure Blob Storage), return it directly
+      return coverPath;
+    } else {
+      // Otherwise prepend the API base URL
+      return `${API_BASE_URL}/${coverPath}`;
+    }
   };
 
   return (
