@@ -8,6 +8,7 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 
 // Import routes
 const bookRoutes = require('./routes/bookRoutes');
@@ -511,3 +512,10 @@ process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
   process.exit(1);
 });
+
+// producion script
+app.use(express.static('./novelistan/build  '));
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'novelistan', 'build', 'index.html'));
+});
+
