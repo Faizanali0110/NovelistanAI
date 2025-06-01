@@ -28,7 +28,7 @@ jobs:
           app_location: "/novelistan"
           api_location: "/backend"
           output_location: "dist"
-          app_build_command: "npm install && node build.mjs"
+          app_build_command: "rm -rf package-lock.json node_modules && npm install --no-optional && node build.mjs"
           action: "upload"
           # Node version is configured via the app's package.json or staticwebapp.config.json
 
