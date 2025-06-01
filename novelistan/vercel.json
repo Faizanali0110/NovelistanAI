@@ -1,10 +1,14 @@
 {
-  "framework": "vite",
   "buildCommand": "node build.mjs",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm install --no-optional",
+  "installCommand": "npm install --ignore-scripts --no-optional",
   "routes": [
     { "src": "/(.*)", "dest": "/index.html" }
-  ]
+  ],
+  "github": {
+    "silent": true
+  },
+  "framework": null,
+  "nodeVersion": "20.x"
 }
