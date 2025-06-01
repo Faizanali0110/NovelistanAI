@@ -52,7 +52,7 @@ app.use(cors({
       'https://novelistanai.azurewebsites.net', // Your Azure backend URL
       'http://localhost:3000',                  // Local development URLs
       'http://localhost:5173',
-      'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net/'
+      'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net'
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
