@@ -1,12 +1,13 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm install --legacy-peer-deps && npm run build",
+  "buildCommand": "npm install --legacy-peer-deps && node build.mjs",
   "outputDirectory": "dist",
   "routes": [
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": {
-    "NODE_VERSION": "18.x"
+    "NODE_VERSION": "18.x",
+    "ROLLUP_SKIP_NODEJS_BUNDLE": "true",
+    "ROLLUP_NATIVE_EXTENSIONS": "false"
   }
 }
