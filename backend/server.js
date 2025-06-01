@@ -48,10 +48,11 @@ app.use(cors({
     }
     
     const allowedOrigins = [
-      'http://localhost:3000',
+      'https://novelistan-ai-ewj8.vercel.app',  // Your Vercel frontend URL
+      'https://novelistanai.azurewebsites.net', // Your Azure backend URL
+      'http://localhost:3000',                  // Local development URLs
       'http://localhost:5173',
-      'http://localhost:5174',
-      'https://novelistan-ai-ewj8.vercel.app'
+      'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net/'
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {

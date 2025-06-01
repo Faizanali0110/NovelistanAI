@@ -3,20 +3,12 @@
   "version": "1.0.0",
   "description": "NovelistanAI - A platform for authors and readers",
   "private": true,
-  "main": "server.js",
   "scripts": {
     "install-all": "npm install && cd backend && npm install && cd ../novelistan && npm install",
-    "start": "node server.js",
     "start-backend": "cd backend && npm start",
     "start-frontend": "cd novelistan && npm run dev",
     "build-frontend": "cd novelistan && npm run build",
     "deploy": "cd backend && npm run build"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "mongoose": "^7.0.3"
   },
   "workspaces": [
     "backend",
