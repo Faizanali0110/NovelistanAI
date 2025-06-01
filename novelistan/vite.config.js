@@ -9,27 +9,30 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
-    // Ensure consistent behavior between dev and prod
+    // Simplify build to avoid native module issues
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
       },
-      // Explicitly disable Rollup native extensions
-      context: 'globalThis',
       external: [],
+      output: {
+        manualChunks: undefined
+      }
     },
-    // Minify options
     minify: 'terser',
     target: 'es2018',
-    // Reduce chunk size
     chunkSizeWarningLimit: 1000,
   },
   // Use relative paths for production builds
   base: './',
-  // Override Rollup options to avoid native extensions
+  // Avoid problematic dependencies
   optimizeDeps: {
-    // Exclude problematic dependencies if needed
-    exclude: [],
+    // Disable optional dependencies
+    disabled: false,
+    esbuildOptions: {
+      // Avoid native modules
+      platform: 'browser'
+    }
   },
   // Force Vite to use the Node.js crypto module instead of the browser one
   resolve: {

@@ -1,0 +1,10 @@
+{
+  "framework": "vite",
+  "buildCommand": "node build.mjs",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install --no-optional",
+  "routes": [
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
+}

@@ -1,10 +1,20 @@
-// build.mjs - Extremely simple static site generator
+// build.mjs - Static site generator with improved Vercel compatibility
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import fs from 'fs/promises';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+async function copyFile(src, dest) {
+  try {
+    await fs.copyFile(src, dest);
+    console.log(`Copied ${src} to ${dest}`);
+  } catch (err) {
+    console.error(`Error copying ${src}: ${err.message}`);
+  }
+}
 
 async function build() {
   console.log('Starting static site generation...');
@@ -21,12 +31,49 @@ async function build() {
     // Create assets directory
     await fs.mkdir(resolve(__dirname, 'dist', 'assets'), { recursive: true });
     
-    // Create a simple index.html
+    // Copy config files needed for deployment
+    const filesToCopy = [
+      // Copy public assets if they exist
+      { src: resolve(__dirname, 'public'), dest: resolve(__dirname, 'dist', 'public') },
+      // Copy vercel.json for deployment configuration
+      { src: resolve(__dirname, 'vercel.json'), dest: resolve(__dirname, 'dist', 'vercel.json') },
+    ];
+    
+    for (const file of filesToCopy) {
+      try {
+        // Check if source exists before copying
+        await fs.access(file.src);
+        
+        const stat = await fs.stat(file.src);
+        if (stat.isDirectory()) {
+          await fs.mkdir(file.dest, { recursive: true });
+          console.log(`Created directory: ${file.dest}`);
+          
+          // For directories, we'd need recursive copying (simplified version)
+          // In a real implementation, you might want a more robust directory copy
+          const files = await fs.readdir(file.src);
+          for (const f of files) {
+            await copyFile(resolve(file.src, f), resolve(file.dest, f));
+          }
+        } else {
+          await copyFile(file.src, file.dest);
+        }
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          console.log(`Skipping ${file.src} (does not exist)`);
+        } else {
+          console.error(`Error processing ${file.src}: ${err.message}`);
+        }
+      }
+    }
+    
+    // Create index.html with link to deployed app
     const indexHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0;url=https://novelistan-ai-ewj8.vercel.app" />
     <title>NovelistanAI</title>
     <style>
       body {
@@ -55,11 +102,6 @@ async function build() {
         font-size: 2.5rem;
         color: #0070f3;
       }
-      h2 {
-        margin-top: 40px;
-        margin-bottom: 15px;
-        font-size: 1.8rem;
-      }
       p {
         margin-bottom: 20px;
         font-size: 1.2rem;
@@ -79,19 +121,6 @@ async function build() {
       .btn:hover {
         background-color: #0051a8;
       }
-      .instructions {
-        text-align: left;
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 5px;
-        margin: 30px 0;
-      }
-      .instructions ol {
-        margin-left: 20px;
-      }
-      .instructions li {
-        margin-bottom: 10px;
-      }
       .footer {
         margin-top: 40px;
         font-size: 0.9rem;
@@ -103,36 +132,25 @@ async function build() {
     <div class="container">
       <h1>Welcome to NovelistanAI</h1>
       <p>Your AI-powered writing assistant</p>
-      
-      <h2>Deployment Status</h2>
-      <p>The previous deployment has been removed. A new deployment is needed to access the application.</p>
-      
-      <div class="instructions">
-        <h2>How to Deploy:</h2>
-        <ol>
-          <li>Go to <a href="https://vercel.com/new" target="_blank">Vercel</a> and log in to your account</li>
-          <li>Import your GitHub repository (Faizanali0110/NovelistanAI)</li>
-          <li>Set the root directory to <code>novelistan</code></li>
-          <li>Deploy your application</li>
-        </ol>
-      </div>
-      
-      <p>Once deployed, you can access all the features of NovelistanAI:</p>
-      <ul>
-        <li>AI-assisted writing</li>
-        <li>Book organization</li>
-        <li>Cloud storage with Azure</li>
-      </ul>
+      <p>Redirecting to the application...</p>
+      <p>If you are not redirected automatically, <a href="https://novelistan-ai-ewj8.vercel.app">click here</a>.</p>
       
       <div class="footer">
-        <p>For assistance, contact the development team or try running the application locally.</p>
+        <p>Powered by Vercel and Azure</p>
       </div>
     </div>
   </body>
 </html>`;
     
     await fs.writeFile(resolve(__dirname, 'dist', 'index.html'), indexHtml);
-    console.log('Created static index.html');
+    console.log('Created static index.html with redirect');
+    
+    // Create a _redirects file for any hosting that supports it
+    await fs.writeFile(
+      resolve(__dirname, 'dist', '_redirects'),
+      '/* https://novelistan-ai-ewj8.vercel.app/:splat 301!\n'
+    );
+    console.log('Created _redirects file');
     
     console.log('Static site generation completed successfully');
   } catch (err) {
