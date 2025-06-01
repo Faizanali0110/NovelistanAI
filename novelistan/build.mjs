@@ -1,4 +1,4 @@
-// build.mjs - Static site generator with improved Vercel compatibility
+// build.mjs - Static site generator for Azure Static Web Apps deployment
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import fs from 'fs/promises';
@@ -35,8 +35,8 @@ async function build() {
     const filesToCopy = [
       // Copy public assets if they exist
       { src: resolve(__dirname, 'public'), dest: resolve(__dirname, 'dist', 'public') },
-      // Copy vercel.json for deployment configuration
-      { src: resolve(__dirname, 'vercel.json'), dest: resolve(__dirname, 'dist', 'vercel.json') },
+      // Copy staticwebapp.config.json for Azure Static Web Apps configuration
+      { src: resolve(__dirname, 'staticwebapp.config.json'), dest: resolve(__dirname, 'dist', 'staticwebapp.config.json') },
     ];
     
     for (const file of filesToCopy) {
@@ -73,7 +73,7 @@ async function build() {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="refresh" content="0;url=https://novelistan-ai-ewj8.vercel.app" />
+    <meta http-equiv="refresh" content="0;url=https://polite-beach-0ccb55f0f.4.azurestaticapps.net" />
     <title>NovelistanAI</title>
     <style>
       body {
@@ -133,10 +133,10 @@ async function build() {
       <h1>Welcome to NovelistanAI</h1>
       <p>Your AI-powered writing assistant</p>
       <p>Redirecting to the application...</p>
-      <p>If you are not redirected automatically, <a href="https://novelistan-ai-ewj8.vercel.app">click here</a>.</p>
+      <p>If you are not redirected automatically, <a href="https://polite-beach-0ccb55f0f.4.azurestaticapps.net">click here</a>.</p>
       
       <div class="footer">
-        <p>Powered by Vercel and Azure</p>
+        <p>Powered by Azure Static Web Apps</p>
       </div>
     </div>
   </body>
@@ -148,7 +148,7 @@ async function build() {
     // Create a _redirects file for any hosting that supports it
     await fs.writeFile(
       resolve(__dirname, 'dist', '_redirects'),
-      '/* https://novelistan-ai-ewj8.vercel.app/:splat 301!\n'
+      '/* https://polite-beach-0ccb55f0f.4.azurestaticapps.net/:splat 301!\n'
     );
     console.log('Created _redirects file');
     

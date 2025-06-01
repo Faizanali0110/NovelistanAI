@@ -48,12 +48,11 @@ app.use(cors({
     }
     
     const allowedOrigins = [
-      'https://novelistan-ai-ewj8.vercel.app',  // Your Vercel frontend URL
       'https://novelistanai.azurewebsites.net', // Your Azure backend URL
-      'http://localhost:3000',                  // Local development URLs
-      'http://localhost:5173',
-      'http://localhost:5173',
-      'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net'
+      'http://localhost:3000',                  // Local development URL
+      'http://localhost:5173',                  // Vite dev server
+      'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net', // Azure backend URL
+      'https://polite-beach-0ccb55f0f.4.azurestaticapps.net'  // Azure Static Web Apps frontend URL
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {

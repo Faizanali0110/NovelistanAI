@@ -1,4 +1,3 @@
-# Azure Static Web Apps deployment workflow
 name: Azure Static Web Apps CI/CD
 
 on:
@@ -30,7 +29,7 @@ jobs:
           output_location: "dist"
           app_build_command: "rm -rf package-lock.json node_modules && npm install --no-optional && node build.mjs"
           action: "upload"
-          # Node version is configured via the app's package.json or staticwebapp.config.json
+          # Node version is configured via package.json and staticwebapp.config.json
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
