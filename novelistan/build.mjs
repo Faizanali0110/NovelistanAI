@@ -18,6 +18,9 @@ async function build() {
     await fs.mkdir(resolve(__dirname, 'dist'), { recursive: true });
     console.log('Created dist directory');
     
+    // Create assets directory
+    await fs.mkdir(resolve(__dirname, 'dist', 'assets'), { recursive: true });
+    
     // Create a simple index.html
     const indexHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -34,14 +37,15 @@ async function build() {
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
         background-color: #f5f5f5;
         color: #333;
         text-align: center;
       }
       .container {
         max-width: 800px;
-        padding: 20px;
+        padding: 40px;
+        margin: 20px;
         background: white;
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -49,10 +53,17 @@ async function build() {
       h1 {
         margin-bottom: 20px;
         font-size: 2.5rem;
+        color: #0070f3;
+      }
+      h2 {
+        margin-top: 40px;
+        margin-bottom: 15px;
+        font-size: 1.8rem;
       }
       p {
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         font-size: 1.2rem;
+        line-height: 1.6;
       }
       .btn {
         display: inline-block;
@@ -63,9 +74,28 @@ async function build() {
         border-radius: 5px;
         font-weight: 500;
         transition: background-color 0.3s;
+        margin: 10px;
       }
       .btn:hover {
         background-color: #0051a8;
+      }
+      .instructions {
+        text-align: left;
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 30px 0;
+      }
+      .instructions ol {
+        margin-left: 20px;
+      }
+      .instructions li {
+        margin-bottom: 10px;
+      }
+      .footer {
+        margin-top: 40px;
+        font-size: 0.9rem;
+        color: #666;
       }
     </style>
   </head>
@@ -73,7 +103,30 @@ async function build() {
     <div class="container">
       <h1>Welcome to NovelistanAI</h1>
       <p>Your AI-powered writing assistant</p>
-      <a href="https://novelistan-ai-ewj8.vercel.app" class="btn">Go to Application</a>
+      
+      <h2>Deployment Status</h2>
+      <p>The previous deployment has been removed. A new deployment is needed to access the application.</p>
+      
+      <div class="instructions">
+        <h2>How to Deploy:</h2>
+        <ol>
+          <li>Go to <a href="https://vercel.com/new" target="_blank">Vercel</a> and log in to your account</li>
+          <li>Import your GitHub repository (Faizanali0110/NovelistanAI)</li>
+          <li>Set the root directory to <code>novelistan</code></li>
+          <li>Deploy your application</li>
+        </ol>
+      </div>
+      
+      <p>Once deployed, you can access all the features of NovelistanAI:</p>
+      <ul>
+        <li>AI-assisted writing</li>
+        <li>Book organization</li>
+        <li>Cloud storage with Azure</li>
+      </ul>
+      
+      <div class="footer">
+        <p>For assistance, contact the development team or try running the application locally.</p>
+      </div>
     </div>
   </body>
 </html>`;
