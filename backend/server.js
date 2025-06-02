@@ -54,6 +54,7 @@ app.use(cors({
       'http://localhost:5174',                  // Another Vite dev server port
       'http://localhost:5175',                  // Another Vite dev server port
       'http://localhost:5176',                  // Another Vite dev server port
+      'https://novelistanai-frontend.windsurf.build', // Netlify frontend domain
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -189,29 +190,44 @@ const connectDB = async () => {
     uri: MONGODB_URI.replace(/\/\/(.+?)@/, '//[REDACTED]@'), // Redact credentials
     options: {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // 30 seconds timeout for server selection
+      socketTimeoutMS: 45000, // 45 seconds timeout for socket operations
+      heartbeatFrequencyMS: 10000, // 10 seconds between heartbeats
+      maxPoolSize: 10 // Maximum 10 connections in the connection pool
     }
   });
+  
+  // Add some delay for Azure startup - sometimes it needs a moment before connecting
+  if (process.env.NODE_ENV === 'production') {
+    logger.info('Running in production mode, waiting 2s before MongoDB connection...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
   
   try {
     await mongoose.connect(MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // 30 seconds timeout for server selection
+      socketTimeoutMS: 45000, // 45 seconds timeout for socket operations
+      heartbeatFrequencyMS: 10000, // 10 seconds between heartbeats
+      maxPoolSize: 10 // Maximum 10 connections in the connection pool
     });
     logger.startup('MongoDB', 'Connected successfully');
   } catch (error) {
     logger.critical('MongoDB connection failed', {
       errorName: error.name,
       errorCode: error.code || 'unknown',
-      hosts: error.message?.includes('failed to connect') ? error.message.match(/connect to ([^:]+)/)?.[1] : 'unknown'
+      hosts: error.message?.includes('failed to connect') ? error.message.match(/connect to ([^:]+)/)?.[1] : 'unknown',
+      mongodb_uri: MONGODB_URI.replace(/\/\/(.+?)@/, '//[CREDENTIALS_HIDDEN]@')
     }, error);
     
     // Don't exit immediately in production to allow for error logging
     if (process.env.NODE_ENV === 'production') {
       logger.critical('Server cannot start without database', {
-        action: 'Delayed process exit (5s)'
+        action: 'Delayed process exit (15s)'
       });
-      setTimeout(() => process.exit(1), 5000); // Give logs time to flush
+      setTimeout(() => process.exit(1), 15000); // Give logs more time to flush in production
     } else {
       process.exit(1);
     }
