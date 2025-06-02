@@ -9,10 +9,7 @@ backend/data/
 backend/uploads/
 
 # Sensitive configuration files
-backend/azure-settings.json
 *.secret.*
 
-# Deployment files
-backend-deploy.zip
-*.zip
+# Keep Azure Blob Storage references intact
 

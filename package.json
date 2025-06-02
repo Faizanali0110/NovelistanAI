@@ -7,8 +7,7 @@
     "install-all": "npm install && cd backend && npm install && cd ../novelistan && npm install",
     "start-backend": "cd backend && npm start",
     "start-frontend": "cd novelistan && npm run dev",
-    "build-frontend": "cd novelistan && npm run build",
-    "deploy": "cd backend && npm run build"
+    "build-frontend": "cd novelistan && npm run build"
   },
   "workspaces": [
     "backend",
