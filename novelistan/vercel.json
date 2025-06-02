@@ -1,6 +1,9 @@
 {
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
+  "env": {
+    "ROLLUP_SKIP_NODEJS_NATIVE": "1"
+  },
   "headers": [
     {
       "source": "/(.*)",
