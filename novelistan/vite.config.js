@@ -11,7 +11,21 @@ module.exports = defineConfig({
     assetsDir: 'assets',
     minify: 'terser',
     target: 'es2018',
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['react-quill', 'lucide-react'],
+        },
+        // Optimize chunk size and improve caching
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
+      }
+    },
+    // Disable inline sourcemaps for better security and performance
+    sourcemap: false,
   },
   // Use relative paths for production builds
   base: '/',
