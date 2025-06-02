@@ -23,6 +23,7 @@ const authorToolsRoutes = require('./routes/authorToolsRoutes');
 const readingExperienceRoutes = require('./routes/readingExperienceRoutes');
 const diagnosticRoutes = require('./routes/diagnosticRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 // Initialize Express app
 const app = express();
@@ -51,6 +52,9 @@ app.use(cors({
       'https://novelistanai.azurewebsites.net', // Your Azure backend URL
       'http://localhost:3000',                  // Local development URL
       'http://localhost:5173',                  // Vite dev server
+      'http://localhost:5174',                  // Another Vite dev server port
+      'http://localhost:5175',                  // Another Vite dev server port
+      'http://localhost:5176',                  // Another Vite dev server port
       'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net', // Azure backend URL
       'https://polite-beach-0ccb55f0f.4.azurestaticapps.net'  // Azure Static Web Apps frontend URL
     ];
@@ -226,6 +230,7 @@ app.use('/api/book', bookRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/diagnostics', diagnosticRoutes);
+app.use('/api/contact', contactRoutes);
 app.use('/api/customer', customerRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/uploads', uploadRoutes);

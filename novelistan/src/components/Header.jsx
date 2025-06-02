@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Book, Menu, X, User, Bell, Search, BookOpen } from 'lucide-react';
+import { Book, Menu, X, User, Bell, Search, BookOpen, Info, Mail } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Cookies from 'js-cookie';
 
@@ -73,6 +73,20 @@ const Header = () => {
               className={`text-base font-medium transition-colors relative group py-6 ${isScrolled ? 'hover:text-primary-600 dark:hover:text-primary-400' : 'hover:text-white/80'}`}
             >
               Favorites
+              <span className={`absolute bottom-4 left-0 w-full h-0.5 ${isScrolled ? 'bg-primary-600 dark:bg-primary-400' : 'bg-white'} scale-x-0 group-hover:scale-x-100 transition-transform`} />
+            </Link>
+            <Link 
+              to="/about" 
+              className={`text-base font-medium transition-colors relative group py-6 ${isScrolled ? 'hover:text-primary-600 dark:hover:text-primary-400' : 'hover:text-white/80'}`}
+            >
+              About
+              <span className={`absolute bottom-4 left-0 w-full h-0.5 ${isScrolled ? 'bg-primary-600 dark:bg-primary-400' : 'bg-white'} scale-x-0 group-hover:scale-x-100 transition-transform`} />
+            </Link>
+            <Link 
+              to="/contact" 
+              className={`text-base font-medium transition-colors relative group py-6 ${isScrolled ? 'hover:text-primary-600 dark:hover:text-primary-400' : 'hover:text-white/80'}`}
+            >
+              Contact
               <span className={`absolute bottom-4 left-0 w-full h-0.5 ${isScrolled ? 'bg-primary-600 dark:bg-primary-400' : 'bg-white'} scale-x-0 group-hover:scale-x-100 transition-transform`} />
             </Link>
           </div>
@@ -154,6 +168,26 @@ const Header = () => {
                 <Bell className="w-5 h-5 text-primary-600 dark:text-primary-400" />
               </div>
               <span>Favorites</span>
+            </Link>
+            <Link 
+              to="/about" 
+              className="flex items-center gap-3 px-4 py-3 text-primary-700 dark:text-white hover:bg-primary-50 dark:hover:bg-secondary-800 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <div className="bg-primary-100 dark:bg-secondary-700 p-2 rounded-lg">
+                <Info className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <span>About</span>
+            </Link>
+            <Link 
+              to="/contact" 
+              className="flex items-center gap-3 px-4 py-3 text-primary-700 dark:text-white hover:bg-primary-50 dark:hover:bg-secondary-800 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <div className="bg-primary-100 dark:bg-secondary-700 p-2 rounded-lg">
+                <Mail className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <span>Contact</span>
             </Link>
           </div>
           

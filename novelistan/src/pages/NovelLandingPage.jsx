@@ -20,50 +20,53 @@ const NovelLandingPage = () => {
       {/* Navigation Bar */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-yellow-500/95 dark:bg-gray-800/95 shadow-lg' : 'bg-yellow-500 dark:bg-gray-800'} text-yellow-900 dark:text-yellow-200 p-4`}>
         <div className="container mx-auto flex justify-between items-center relative">
-          <div className="flex items-center space-x-2">
-            <Book className="h-8 w-8 text-black dark:text-yellow-300" />
-            <h1 className="text-2xl font-bold dark:text-yellow-300">Novelistan</h1>
+          <div className="flex items-center">
+            <div className="flex items-center space-x-2 mr-8">
+              <Book className="h-8 w-8 text-black dark:text-yellow-300" />
+              <h1 className="text-2xl font-bold dark:text-yellow-300">Novelistan</h1>
+            </div>
+
+            {/* Desktop Nav - Moved to left side */}
+            <div className="hidden md:flex space-x-6 items-center">
+              <Link to="/" className="flex items-center space-x-1 hover:text-yellow-800 dark:hover:text-yellow-200">
+                <Home className="h-5 w-5" />
+                <span>Home</span>
+              </Link>
+              <Link to="/about" className="flex items-center space-x-1 hover:text-yellow-800 dark:hover:text-yellow-200">
+                <User className="h-5 w-5" />
+                <span>About</span>
+              </Link>
+              <Link to="/contact" className="flex items-center space-x-1 hover:text-yellow-800 dark:hover:text-yellow-200">
+                <Mail className="h-5 w-5" />
+                <span>Contact</span>
+              </Link>
+            </div>
           </div>
 
-          {/* Hamburger for mobile */}
-          <button
-            className="md:hidden flex items-center px-2 py-1 rounded hover:bg-yellow-400 focus:outline-none dark:bg-gray-700 dark:hover:bg-gray-600"
-            onClick={() => setMobileNavOpen(o => !o)}
-            aria-label="Open navigation menu"
-          >
-            <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex space-x-6 items-center">
-            <Link to="/" className="flex items-center space-x-1 hover:text-yellow-800 dark:hover:text-yellow-200">
-              <Home className="h-5 w-5" />
-              <span>Home</span>
-            </Link>
-            <Link to="/about" className="flex items-center space-x-1 hover:text-yellow-800 dark:hover:text-yellow-200">
-              <User className="h-5 w-5" />
-              <span>About</span>
-            </Link>
-            <Link to="/contact" className="flex items-center space-x-1 hover:text-yellow-800 dark:hover:text-yellow-200">
-              <Mail className="h-5 w-5" />
-              <span>Contact</span>
-            </Link>
-          </div>
-          <div className="flex space-x-4 items-center">
-            {/* Dark Mode Toggle */}
+          <div className="flex items-center space-x-4">
+            {/* Hamburger for mobile */}
+            <button
+              className="md:hidden flex items-center px-2 py-1 rounded hover:bg-yellow-400 focus:outline-none dark:bg-gray-700 dark:hover:bg-gray-600"
+              onClick={() => setMobileNavOpen(o => !o)}
+              aria-label="Open navigation menu"
+            >
+              <svg className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            
+            {/* Dark Mode Toggle - Moved to right side with buttons */}
             <DarkModeToggle />
             <Link 
               to="/login" 
-              className="bg-black text-yellow-500 px-3 py-1.5 rounded-md flex items-center space-x-1 hover:bg-yellow-800 transition dark:bg-gray-700 dark:text-yellow-200 dark:hover:bg-gray-600 text-sm"
+              className="hidden md:flex bg-black text-yellow-500 px-3 py-1.5 rounded-md items-center space-x-1 hover:bg-yellow-800 transition dark:bg-gray-700 dark:text-yellow-200 dark:hover:bg-gray-600 text-sm"
             >
               <LogIn className="h-4 w-4" />
               <span>Login</span>
             </Link>
             <Link 
               to="/signup" 
-              className="bg-black text-yellow-500 px-3 py-1.5 rounded-md flex items-center space-x-1 hover:bg-yellow-800 transition dark:bg-gray-700 dark:text-yellow-200 dark:hover:bg-gray-600 text-sm"
+              className="hidden md:flex bg-black text-yellow-500 px-3 py-1.5 rounded-md items-center space-x-1 hover:bg-yellow-800 transition dark:bg-gray-700 dark:text-yellow-200 dark:hover:bg-gray-600 text-sm"
             >
               <UserPlus className="h-4 w-4" />
               <span>Sign Up</span>
