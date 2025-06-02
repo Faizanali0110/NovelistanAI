@@ -23,12 +23,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "routes": [
-    { 
-      "src": "/api/(.*)", 
-      "dest": "https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net/api/$1" 
-    }
   ]
 }
