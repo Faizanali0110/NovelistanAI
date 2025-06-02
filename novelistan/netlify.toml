@@ -7,7 +7,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net/api/:splat"
+  to = "https://your-new-backend-url.com/api/:splat"
   status = 200
   force = true
 

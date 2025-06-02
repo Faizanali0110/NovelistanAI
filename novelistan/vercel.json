@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://novelistanupload.blob.core.windows.net https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net;"
+          "value": "default-src 'self'; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https://novelistanupload.blob.core.windows.net https://your-new-backend-url.com;"
         },
         {
           "key": "X-Content-Type-Options",
@@ -23,7 +23,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://your-new-backend-url.com/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
