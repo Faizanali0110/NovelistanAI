@@ -12,3 +12,7 @@ backend/uploads/
 backend/azure-settings.json
 *.secret.*
 
+# Deployment files
+backend-deploy.zip
+*.zip
+
