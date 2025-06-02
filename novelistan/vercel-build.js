@@ -5,7 +5,7 @@
 process.env.ROLLUP_SKIP_NODEJS_NATIVE = '1';
 
 // Execute the build command
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 try {
   console.log('Setting ROLLUP_SKIP_NODEJS_NATIVE=1');
