@@ -331,29 +331,60 @@ const ViewBooks = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 dark:from-secondary-900 dark:to-secondary-800 transition-colors duration-300">
-      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-800 shadow-xl transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-primary-300 dark:text-primary-300" />
-            </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-32 py-4 rounded-xl bg-primary-700/50 dark:bg-primary-800/50 text-white placeholder-primary-200 border-2 border-primary-500/30 dark:border-primary-500/20 focus:border-primary-400 focus:ring-2 focus:ring-primary-400 transition-all duration-300"
-              placeholder="Search for your next adventure..."
-            />
-            <div className="absolute inset-y-0 right-0 flex items-center">
-              <select
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
-                className="h-full py-0 pl-4 pr-8 border-transparent bg-transparent text-primary-200 dark:text-primary-300 font-medium focus:ring-0 cursor-pointer transition-colors duration-300"
+      <div className="sticky top-0 z-50 bg-gradient-to-r from-primary-600/95 to-primary-700/95 dark:from-primary-800/95 dark:to-primary-900/95 backdrop-blur-md shadow-xl transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 py-5">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="relative w-full md:flex-1 group">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary-300 dark:text-primary-300 transition-all duration-300 group-hover:text-white dark:group-hover:text-white group-focus-within:text-white group-focus-within:scale-110">
+                <Search className="h-5 w-5 transition-transform duration-300" />
+              </div>
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full pl-12 pr-4 py-4 rounded-xl bg-primary-700/40 dark:bg-primary-800/40 text-white placeholder-primary-200 border-2 border-primary-500/30 dark:border-primary-500/20 focus:border-primary-400/80 focus:ring-2 focus:ring-primary-400/30 hover:border-primary-400/50 transition-all duration-300 shadow-md"
+                placeholder="Search for your next adventure..."
+                aria-label="Search books"
+              />
+              <button
+                onClick={handleSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-primary-500 hover:bg-primary-400 active:bg-primary-600 text-white px-4 py-2 rounded-lg transition-all duration-300 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 shadow-md"
+                aria-label="Submit search"
               >
-                <option value="name" className="text-gray-900">Name</option>
-                <option value="isbn" className="text-gray-900">ISBN</option>
-                <option value="genre" className="text-gray-900">Genre</option>
-              </select>
+                Search
+              </button>
+            </div>
+            
+            <div className="flex w-full md:w-auto space-x-2 md:space-x-3">
+              <div className="relative flex-1 md:flex-none">
+                <select
+                  value={searchType}
+                  onChange={(e) => setSearchType(e.target.value)}
+                  className="w-full md:w-auto appearance-none px-4 py-3 md:py-4 border-transparent bg-primary-600/60 hover:bg-primary-500/70 dark:bg-primary-700/60 dark:hover:bg-primary-600/70 text-white font-medium rounded-lg focus:ring-2 focus:ring-primary-400/50 cursor-pointer transition-colors duration-300"
+                  aria-label="Select search type"
+                >
+                  <option value="name" className="text-gray-900">By Title</option>
+                  <option value="isbn" className="text-gray-900">By ISBN</option>
+                  <option value="genre" className="text-gray-900">By Genre</option>
+                </select>
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  handleSearch();
+                }}
+                className="flex-none bg-primary-600/60 hover:bg-primary-500/70 dark:bg-primary-700/60 dark:hover:bg-primary-600/70 text-white px-4 py-3 md:py-4 rounded-lg transition-colors duration-300"
+                aria-label="Reset search"
+              >
+                Reset
+              </button>
             </div>
           </div>
         </div>

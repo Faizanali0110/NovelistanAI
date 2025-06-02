@@ -24,6 +24,7 @@ const readingExperienceRoutes = require('./routes/readingExperienceRoutes');
 const diagnosticRoutes = require('./routes/diagnosticRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const bookDraftRoutes = require('./routes/bookDraftRoutes');
 
 // Initialize Express app
 const app = express();
@@ -55,6 +56,9 @@ app.use(cors({
       'http://localhost:5175',                  // Another Vite dev server port
       'http://localhost:5176',                  // Another Vite dev server port
       'https://novelistanai-frontend.windsurf.build', // Netlify frontend domain
+      'https://novelistanai-frontend-wlkh4.netlify.app', // Netlify app domain
+      'https://novelistan-ai-ewj8.vercel.app',   // Vercel deployed frontend
+      'https://novelistan.vercel.app',          // Potential alternative Vercel URL
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -243,12 +247,13 @@ app.use('/api/book', bookRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/diagnostics', diagnosticRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/customer', customerRoutes);
 app.use('/api/reviews', reviewRoutes);
-app.use('/api/uploads', uploadRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/author-tools', authorToolsRoutes);
-app.use('/api/reading', readingExperienceRoutes);
+app.use('/api/reading-experience', readingExperienceRoutes);
+app.use('/api/customer', customerRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/book-drafts', bookDraftRoutes);
 
 // ======================
 // 6. Health Check Routes

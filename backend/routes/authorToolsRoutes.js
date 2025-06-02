@@ -7,7 +7,9 @@ const {
   analyzeWritingStyle, 
   generatePlotSuggestions,
   saveToolResult,
-  getAuthorToolResults
+  getAuthorToolResults,
+  generateTextSuggestion,
+  provideWritingAssistance
 } = require('../services/authorToolsService');
 
 // Get all author tool results for the authenticated author
@@ -181,6 +183,70 @@ router.post('/plot-suggestions', auth(['author']), async (req, res) => {
     console.error('Plot suggestions error:', error);
     res.status(500).json({ 
       message: 'Error generating plot suggestions', 
+      error: error.message 
+    });
+  }
+});
+
+// Text completion suggestions
+router.post('/text-suggestion', auth(['author']), async (req, res) => {
+  try {
+    const { currentText } = req.body;
+
+    // Validate input
+    if (!currentText) {
+      return res.status(400).json({ message: 'Current text is required' });
+    }
+
+    // Generate text suggestion
+    const suggestion = await generateTextSuggestion(currentText);
+
+    // Save the result
+    await saveToolResult({
+      author: req.user._id,
+      book: req.body.bookId || null,
+      toolType: 'textSuggestion',
+      prompt: currentText.slice(-100) + '...', // Save just the end of the text as prompt
+      result: suggestion
+    });
+
+    res.json({ suggestion });
+  } catch (error) {
+    console.error('Text suggestion error:', error);
+    res.status(500).json({ 
+      message: 'Error generating text suggestion', 
+      error: error.message 
+    });
+  }
+});
+
+// Writing assistance
+router.post('/writing-assistance', auth(['author']), async (req, res) => {
+  try {
+    const { currentText, request, bookId } = req.body;
+
+    // Validate input
+    if (!currentText || !request) {
+      return res.status(400).json({ message: 'Current text and request are required' });
+    }
+
+    // Provide writing assistance
+    const assistance = await provideWritingAssistance(currentText, request);
+
+    // Save the result
+    await saveToolResult({
+      author: req.user._id,
+      book: bookId || null,
+      toolType: 'writingAssistance',
+      prompt: request,
+      result: assistance
+    });
+
+    res.json({ assistance });
+  } catch (error) {
+    console.error('Writing assistance error:', error);
+    res.status(500).json({ 
+      message: 'Error providing writing assistance', 
       error: error.message 
     });
   }

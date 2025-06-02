@@ -184,11 +184,69 @@ ${truncatedText}`;
   }
 }
 
+/**
+ * Generate text completion suggestions based on the provided text
+ * @param {string} currentText - The current text that needs completion
+ * @returns {Promise<string>} - Text completion suggestions
+ */
+async function generateTextSuggestion(currentText) {
+  try {
+    // Limit input text length to avoid token limits
+    const limitedText = currentText.slice(-1000);
+    
+    const prompt = `Continue the following text with a natural, engaging completion that matches the style and tone of the existing content. Only provide the continuation (1-2 sentences), not a complete analysis or overview.
+
+Text: ${limitedText}
+
+Continuation:`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating text suggestion:', error);
+    throw new Error('Failed to generate text suggestion');
+  }
+}
+
+/**
+ * Provide writing assistance based on the author's request
+ * @param {string} currentText - The current text in the editor
+ * @param {string} request - The author's specific request for help
+ * @returns {Promise<string>} - Writing assistance response
+ */
+async function provideWritingAssistance(currentText, request) {
+  try {
+    // Limit input text length to avoid token limits
+    const limitedText = currentText.length > 2000 
+      ? currentText.slice(-2000) + '... [previous content truncated]' 
+      : currentText;
+    
+    const prompt = `As a writing assistant, help the author with the following request related to their current writing:
+
+Current Text:
+${limitedText}
+
+Author's Request: ${request}
+
+Provide helpful, specific guidance that addresses the author's request.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error providing writing assistance:', error);
+    throw new Error('Failed to provide writing assistance');
+  }
+}
+
 module.exports = {
   generateCoverSuggestions,
   analyzeWritingStyle,
   analyzeWritingStyleFromText,
   generatePlotSuggestions,
   saveToolResult,
-  getAuthorToolResults
+  getAuthorToolResults,
+  generateTextSuggestion,
+  provideWritingAssistance
 };

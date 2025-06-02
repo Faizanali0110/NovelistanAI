@@ -43,7 +43,7 @@ const ReadingExperience = () => {
       const token = Cookies.get('token');
       console.log('Using token for preferences:', token ? 'Present' : 'None');
       
-      const response = await axios.get(`${API_BASE_URL}/api/reading/preferences`, {
+      const response = await axios.get(`${API_BASE_URL}/api/reading-experience/preferences`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json'
@@ -65,7 +65,7 @@ const ReadingExperience = () => {
       const token = Cookies.get('token');
       console.log('Using token for updating preferences:', token ? 'Present' : 'None');
       
-      const response = await axios.put(`${API_BASE_URL}/api/reading/preferences`, preferences, {
+      const response = await axios.put(`${API_BASE_URL}/api/reading-experience/preferences`, preferences, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json'
@@ -124,7 +124,7 @@ const ReadingExperience = () => {
       const token = Cookies.get('token');
       console.log('Using token for reading plan:', token ? 'Present' : 'None');
       
-      const response = await axios.get(`${API_BASE_URL}/api/reading/plan`, {
+      const response = await axios.get(`${API_BASE_URL}/api/reading-experience/plan`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
           'Content-Type': 'application/json'

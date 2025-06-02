@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Menu, X, Bell, Search, Sun, Moon, User, Book, PenTool } from 'lucide-react';
+import { BookOpen, Menu, X, Bell, Search, Sun, Moon, User, Book, PenTool, Edit3 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import Cookies from 'js-cookie';
 import axios from 'axios';
@@ -297,28 +297,50 @@ const SharedHeader = ({ userRole = 'customer' }) => {
             })}
             
             {userRole === 'author' && (
-              <Link 
-                to="/creative-tools" 
-                className="flex items-center gap-3 px-4 py-3 text-primary-700 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <div className="bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded-lg">
-                  <PenTool className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <span>Creative Tools</span>
-              </Link>
+              <>
+                <Link 
+                  to="/author/writing" 
+                  className="flex items-center gap-3 px-4 py-3 text-primary-700 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded-lg">
+                    <Edit3 className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <span>Write & Edit</span>
+                </Link>
+                <Link 
+                  to="/author/creative-tools" 
+                  className="flex items-center gap-3 px-4 py-3 text-primary-700 dark:text-white hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded-lg">
+                    <PenTool className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <span>Creative Tools</span>
+                </Link>
+              </>
             )}
           </div>
           
-          {/* Search */}
+          {/* Modern Search */}
           <div className="mt-4 px-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-400 dark:text-primary-500 w-5 h-5" />
+            <div className="relative group">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary-400 dark:text-primary-500 transition-all duration-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-focus-within:text-primary-600 dark:group-focus-within:text-primary-400">
+                <Search className="w-5 h-5 transition-transform duration-300 group-focus-within:scale-110" />
+              </div>
               <input 
                 type="text" 
-                placeholder={userRole === 'author' ? "Search your books..." : "Search books..."} 
-                className="w-full bg-primary-50 dark:bg-secondary-800 border border-primary-200 dark:border-secondary-700 rounded-lg py-3 pl-10 pr-4 text-primary-800 dark:text-white placeholder-primary-400 dark:placeholder-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600"
+                placeholder={userRole === 'author' ? "Search your books..." : "Search for your next adventure..."} 
+                className="w-full bg-primary-50/80 dark:bg-secondary-800/70 backdrop-blur-sm border-2 border-primary-200/70 dark:border-secondary-700/70 rounded-xl py-3 pl-10 pr-12 text-primary-800 dark:text-white placeholder-primary-400 dark:placeholder-primary-500 shadow-sm transition-all duration-300 
+                focus:outline-none focus:border-primary-500 dark:focus:border-primary-600 focus:ring-2 focus:ring-primary-500/20 dark:focus:ring-primary-600/30 focus:bg-white dark:focus:bg-secondary-800
+                hover:border-primary-300 dark:hover:border-secondary-600 hover:shadow-md"
               />
+              <button 
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-primary-500 dark:bg-primary-600 text-white rounded-lg p-1.5 opacity-0 scale-90 transition-all duration-300 group-focus-within:opacity-100 group-hover:opacity-100 group-focus-within:scale-100 hover:bg-primary-600 dark:hover:bg-primary-700"
+                aria-label="Search"
+              >
+                <Search className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>

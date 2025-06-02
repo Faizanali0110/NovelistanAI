@@ -12,7 +12,7 @@ const authorToolSchema = new mongoose.Schema({
   },
   toolType: {
     type: String,
-    enum: ['coverSuggestion', 'writingFeedback', 'plotDevelopment'],
+    enum: ['coverSuggestion', 'writingFeedback', 'plotDevelopment', 'textSuggestion', 'writingAssistance'],
     required: true
   },
   prompt: {

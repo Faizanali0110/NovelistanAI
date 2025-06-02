@@ -6,6 +6,7 @@ import DeleteBook from "./DeleteBook";
 import Dashboard from "./Dashboard";
 import ViewBooks from "./ViewAuthorBooks";
 import CreativeTools from "./CreativeTools";
+import BookWritingEditor from "./BookWritingEditor";
 import Footer from "../components/Footer";
 import SharedHeader from "../components/SharedHeader";
 import Cookies from 'js-cookie';
@@ -33,6 +34,8 @@ const AuthorHandling = () => {
           <Route path="delete-book" element={<DeleteBook />} />
           <Route path="creative-tools/:bookId" element={<CreativeTools />} />
           <Route path="creative-tools" element={<CreativeTools />} />
+          <Route path="writing/:draftId" element={<BookWritingEditor />} />
+          <Route path="writing" element={<BookWritingEditor />} />
         </Routes>
        
       </main>

@@ -3,7 +3,7 @@ const isDevelopment = window.location.hostname === 'localhost' || window.locatio
 
 const API_BASE_URL = isDevelopment 
   ? 'http://localhost:8082' 
-  : 'https://novelistanai-backend-deployment-gkhae2hca5acf4b5.canadacentral-01.azurewebsites.net';
+  : 'https://novelistanai-backend-bmf0hadkhzc5hcct.canadacentral-01.azurewebsites.net';
 
 console.log(`Using API base URL: ${API_BASE_URL} (${isDevelopment ? 'development' : 'production'} mode)`);
 
