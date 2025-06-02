@@ -8,19 +8,22 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "preinstall": "echo \"optional=false\" > .npmrc",
+    "preinstall": "node -e \"if (!require('fs').existsSync('.npmrc') || require('fs').readFileSync('.npmrc', 'utf8').trim() === '') require('fs').writeFileSync('.npmrc', 'optional=false\nlegacy-peer-deps=true\nignore-scripts=false\nnode-linker=hoisted')\"",
     "vercel-build": "node vercel-build.js"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
     "axios": "^1.7.9",
     "date-fns": "^4.1.0",
+    "docx": "^9.5.0",
+    "file-saver": "^2.0.5",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.468.0",
     "process": "^0.11.10",
     "react": "^18.3.1",
     "react-cookie": "^7.2.2",
     "react-dom": "^18.3.1",
+    "react-quill": "^2.0.0",
     "react-router-dom": "^6.22.0"
   },
   "devDependencies": {
@@ -41,7 +44,10 @@
     "vite": "^4.3.9"
   },
   "overrides": {
-    "rollup": "3.20.0"
+    "rollup": "3.20.0",
+    "@rollup/rollup-linux-x64-gnu": "4.12.0",
+    "@rollup/rollup-darwin-arm64": "4.12.0",
+    "@rollup/rollup-win32-x64-msvc": "4.12.0"
   },
   "engines": {
     "node": "20.x"
