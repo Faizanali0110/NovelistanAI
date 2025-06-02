@@ -1,9 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+const { defineConfig } = require('vite');
+const react = require('@vitejs/plugin-react');
+const { resolve } = require('path');
+
+// Ensure Rollup doesn't try to use native modules
+process.env.ROLLUP_SKIP_NODEJS_NATIVE = '1';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+module.exports = defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',

@@ -1,8 +1,11 @@
 {
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist",
+  "installCommand": "npm install --no-optional",
   "env": {
-    "ROLLUP_SKIP_NODEJS_NATIVE": "1"
+    "ROLLUP_SKIP_NODEJS_NATIVE": "1",
+    "VITE_SKIP_NATIVE_MODULES": "true",
+    "npm_config_optional": "false"
   },
   "headers": [
     {
