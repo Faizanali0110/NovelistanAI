@@ -9,7 +9,7 @@
     "lint": "eslint . --ext js,jsx --fix",
     "preview": "vite preview --port 4173",
     "preinstall": "echo \"Using .npmrc file for configuration\"",
-    "vercel-build": "vite build",
+    "vercel-build": "npm rebuild && vite build",
     "start": "vite --host 0.0.0.0 --port 5173",
     "clean": "rm -rf node_modules/.vite"
   },
