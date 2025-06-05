@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Menu, X, Bell, Search, Sun, Moon, User, Book, PenTool, Edit3 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import Cookies from 'js-cookie';
 import axios from 'axios';
 import API_BASE_URL from '../config';
+import Cookies from 'js-cookie';
 
 // Default avatar constants
 const DEFAULT_AVATAR = "https://ui-avatars.com/api/?name=User&background=ffe066&color=7d5a00&rounded=true&size=96";
@@ -19,11 +19,14 @@ const SharedHeader = ({ userRole = 'customer' }) => {
   const [userImage, setUserImage] = useState('');
   const location = useLocation();
   
-  // Get user info from cookies
-  const customerId = Cookies.get('customerId');
-  const authorId = Cookies.get('authorId');
+  // Get user info from cookies and localStorage
+  const customerId = Cookies.get('customerId') || localStorage.getItem('customerId');
+  const authorId = Cookies.get('authorId') || localStorage.getItem('authorId');
   const userId = userRole === 'author' ? authorId : customerId;
-  const userName = (userRole === 'author' ? Cookies.get('authorName') : Cookies.get('customerName')) || (userRole === 'author' ? 'Author' : 'Reader');
+  const userName = (userRole === 'author' 
+    ? (Cookies.get('authorName') || localStorage.getItem('authorName')) 
+    : (Cookies.get('customerName') || localStorage.getItem('customerName'))) 
+    || (userRole === 'author' ? 'Author' : 'User');
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -44,6 +47,7 @@ const SharedHeader = ({ userRole = 'customer' }) => {
   useEffect(() => {
     // Function to generate a fallback avatar
     const generateAvatar = () => {
+      const name = userName || 'User';
       const backgroundColor = isDark 
         ? (userRole === 'author' ? '704000' : '5f4d00') 
         : (userRole === 'author' ? 'ffd580' : 'ffe066');
@@ -52,11 +56,14 @@ const SharedHeader = ({ userRole = 'customer' }) => {
         ? (userRole === 'author' ? 'ffd580' : 'ffe066') 
         : (userRole === 'author' ? '8c5000' : '7d5a00');
       
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=${backgroundColor}&color=${textColor}&rounded=true&size=96`;
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${backgroundColor}&color=${textColor}&rounded=true&size=96`;
     };
     
+    // Set a default avatar immediately
+    setUserImage(generateAvatar());
+    
+    // If no user ID, keep the default avatar
     if (!userId) {
-      setUserImage(generateAvatar());
       return;
     }
     
@@ -124,9 +131,10 @@ const SharedHeader = ({ userRole = 'customer' }) => {
   // Navigation links based on user role
   const navLinks = userRole === 'author' 
     ? [
-        { to: '/', label: 'Dashboard', icon: User },
-        { to: '/view-books', label: 'My Books', icon: BookOpen },
-        { to: '/add-book', label: 'Add Book', icon: Book }
+        { to: '/AuthorHandling/', label: 'Dashboard', icon: User },
+        { to: '/AuthorHandling/view-books', label: 'My Books', icon: BookOpen },
+        { to: '/AuthorHandling/add-book', label: 'Add Book', icon: Book },
+        { to: '/AuthorHandling/creative-tools', label: 'Creative Tools', icon: PenTool }
       ]
     : [
         { to: '/', label: 'Dashboard', icon: User },
@@ -208,6 +216,21 @@ const SharedHeader = ({ userRole = 'customer' }) => {
                   'bg-white'} scale-x-0 group-hover:scale-x-100 transition-transform`} />
               </Link>
             ))}
+            
+            {/* Start Writing Button - Only for Authors */}
+            {userRole === 'author' && (
+              <Link 
+                to="/AuthorHandling/writing" 
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 transform hover:scale-105 ${
+                  isScrolled 
+                    ? 'bg-yellow-500 text-white hover:bg-yellow-600 shadow-md' 
+                    : 'bg-white text-yellow-700 hover:bg-yellow-50 shadow-lg'
+                }`}
+              >
+                <PenTool className="w-4 h-4" />
+                <span>Start Writing</span>
+              </Link>
+            )}
           </div>
           
           <div className="flex items-center gap-2.5">

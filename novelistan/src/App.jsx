@@ -12,9 +12,7 @@ import NotFoundPage from './NotFoundPage';
 import CustomerHandling from './Customer/CustomerHandling';
 import { ThemeProvider } from './contexts/ThemeContext';
 
-const App = () => {
-
-
+function App() {
   return (
     <ThemeProvider>
       <Router>
@@ -29,7 +27,8 @@ const App = () => {
           <Route path="*" element={<NotFoundPage/>} /> {/* Fallback */}
         </Routes>
       </Router>
-    </ThemeProvider>);
+    </ThemeProvider>
+  );
 };
 
 export default App;

@@ -91,29 +91,48 @@ function CustomerHandling() {
                     </div>
                     
                     <nav className="flex-1 space-y-1">
-                        <NavLink to="/" end
+                        <NavLink to="/CustomerHandling" end
                             className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            onClick={() => window.scrollTo(0, 0)}
                         >
                             <Home className="w-5 h-5" />
-                            <span>Home</span>
+                            <span>Dashboard</span>
                         </NavLink>
                         
-                        <NavLink to="/books"
+                        <NavLink to="/CustomerHandling/books"
                             className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            onClick={() => {
+                                // Scroll to top and focus on search if on books page
+                                window.scrollTo(0, 0);
+                                if (window.location.pathname === '/CustomerHandling/books') {
+                                    const searchInput = document.getElementById('book-search');
+                                    if (searchInput) searchInput.focus();
+                                }
+                            }}
                         >
                             <BookOpen className="w-5 h-5" />
-                            <span>Books</span>
+                            <span>Browse Books</span>
                         </NavLink>
                         
-                        <NavLink to="/favorites"
+                        <NavLink to="/CustomerHandling/favorites"
                             className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            onClick={() => window.scrollTo(0, 0)}
                         >
                             <Heart className="w-5 h-5" />
                             <span>Favorites</span>
                         </NavLink>
                         
-                        <NavLink to="/settings"
+                        <NavLink to="/CustomerHandling/reading-experience"
                             className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            onClick={() => window.scrollTo(0, 0)}
+                        >
+                            <BookMarked className="w-5 h-5" />
+                            <span>Reading List</span>
+                        </NavLink>
+                        
+                        <NavLink to="/CustomerHandling/settings"
+                            className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            onClick={() => window.scrollTo(0, 0)}
                         >
                             <Settings className="w-5 h-5" />
                             <span>Settings</span>
@@ -126,26 +145,37 @@ function CustomerHandling() {
             <div className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-16 bg-primary-700 dark:bg-secondary-800 shadow-lg z-30">
                 <div className="flex flex-col items-center py-4 pt-28"> 
                     <nav className="flex flex-col items-center gap-4">
-                        <NavLink to="/" end
+                        <NavLink to="/CustomerHandling" end
                             className={({isActive}) => `w-10 h-10 flex items-center justify-center rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            title="Dashboard"
                         >
                             <Home className="w-5 h-5" />
                         </NavLink>
                         
-                        <NavLink to="/books"
+                        <NavLink to="/CustomerHandling/books"
                             className={({isActive}) => `w-10 h-10 flex items-center justify-center rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            title="Browse Books"
                         >
                             <BookOpen className="w-5 h-5" />
                         </NavLink>
                         
-                        <NavLink to="/favorites"
+                        <NavLink to="/CustomerHandling/favorites"
                             className={({isActive}) => `w-10 h-10 flex items-center justify-center rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            title="Favorites"
                         >
                             <Heart className="w-5 h-5" />
                         </NavLink>
                         
-                        <NavLink to="/settings"
+                        <NavLink to="/CustomerHandling/reading-experience"
                             className={({isActive}) => `w-10 h-10 flex items-center justify-center rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            title="Reading List"
+                        >
+                            <BookMarked className="w-5 h-5" />
+                        </NavLink>
+                        
+                        <NavLink to="/CustomerHandling/settings"
+                            className={({isActive}) => `w-10 h-10 flex items-center justify-center rounded-lg ${isActive ? 'bg-primary-600/50 text-white' : 'text-primary-100 hover:bg-primary-600/30'}`}
+                            title="Settings"
                         >
                             <Settings className="w-5 h-5" />
                         </NavLink>
@@ -176,8 +206,40 @@ function CustomerHandling() {
                         <Route path="/books" element={<ViewBooks />} />
                         <Route path="/books/:bookId" element={<ViewBooks />} />
                         <Route path="/reading-experience" element={<ReadingExperience />} />
-                        <Route path="/favorites" element={<div className="py-8"><h1 className="text-2xl font-bold mb-4 text-primary-800 dark:text-primary-300">Favorites</h1><p className="text-primary-600 dark:text-primary-500">Your favorite books will appear here.</p></div>} />
-                        <Route path="/settings" element={<div className="py-8"><h1 className="text-2xl font-bold mb-4 text-primary-800 dark:text-primary-300">Settings</h1><p className="text-primary-600 dark:text-primary-500">User settings will appear here.</p></div>} />
+                        <Route path="/favorites" element={
+                            <div className="py-8">
+                                <h1 className="text-2xl font-bold mb-4 text-primary-800 dark:text-primary-300">Your Favorites</h1>
+                                <p className="text-primary-600 dark:text-primary-500 mb-6">Books you've marked as favorites will appear here.</p>
+                                <Link 
+                                    to="/CustomerHandling/books" 
+                                    className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
+                                >
+                                    <BookOpen className="w-4 h-4" />
+                                    Browse Books
+                                </Link>
+                            </div>
+                        } />
+                        <Route path="/settings" element={
+                            <div className="py-8">
+                                <h1 className="text-2xl font-bold mb-6 text-primary-800 dark:text-primary-300">Account Settings</h1>
+                                <div className="bg-white dark:bg-secondary-800 rounded-xl p-6 shadow-sm">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h3 className="font-medium text-primary-800 dark:text-primary-200">Profile</h3>
+                                            <p className="text-sm text-primary-600 dark:text-primary-400">Update your profile information and preferences</p>
+                                        </div>
+                                        <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                                            <h3 className="font-medium text-primary-800 dark:text-primary-200">Notifications</h3>
+                                            <p className="text-sm text-primary-600 dark:text-primary-400">Manage your notification preferences</p>
+                                        </div>
+                                        <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                                            <h3 className="font-medium text-primary-800 dark:text-primary-200">Security</h3>
+                                            <p className="text-sm text-primary-600 dark:text-primary-400">Update your password and security settings</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        } />
                     </Routes>
                 </div>
             </main>

@@ -106,9 +106,35 @@ router.get('/search/BookByGenre', async (req, res) => {
 // Get books by author ID
 router.get('/authorBook/:authorId', auth(['author']), async (req, res) => {
   try {
-    const books = await Book.find({ author: req.params.authorId });
+    console.log('Fetching books for author ID:', req.params.authorId);
+    console.log('Authenticated user:', req.user ? req.user._id : 'No user in request');
+    
+    const books = await Book.find({ author: req.params.authorId })
+      .populate('author', 'name email') // Populate author details
+      .lean();
+      
+    console.log(`Found ${books.length} books for author ${req.params.authorId}`);
+    
+    if (books.length === 0) {
+      console.log('No books found for this author. Checking if author exists...');
+      // Check if the author exists in the database
+      const Author = require('../models/Author');
+      const authorExists = await Author.findById(req.params.authorId);
+      if (!authorExists) {
+        console.log('Author not found in database');
+        return res.status(404).json({ message: 'Author not found' });
+      }
+      console.log('Author exists but has no books');
+    }
+    
     res.json(books);
   } catch (error) {
+    console.error('Error in /authorBook/:authorId:', {
+      message: error.message,
+      stack: error.stack,
+      params: req.params,
+      user: req.user ? req.user._id : 'No user'
+    });
     res.status(500).json({ message: 'Error fetching author books', error: error.message });
   }
 });
